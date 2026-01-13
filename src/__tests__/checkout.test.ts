@@ -39,4 +39,21 @@ describe("createPurchaseTransaction (Configurable)", () => {
         const payload = await createPurchaseTransaction("TOK-1", 1, 1, "XoXnO");
         expect(payload.receiver).toBe("erd1lp3hkcsqcprmvm6sr7a92zcgxyl3hfyqge5zem232j9axvmnr8esrj8shs");
     });
+
+    // Coverage Tests (Hex Padding)
+    it("should handle large nonces (odd length hex)", async () => {
+        // 256 -> hex "100" (odd length 3) -> padded "0100"
+        const payload = await createPurchaseTransaction("TOK-1", 256, 1);
+        // Arg 2 is Nonce
+        const args = payload.data.split("@");
+        expect(args[2]).toBe("0100");
+    });
+
+    it("should handle quantity with even hex length", async () => {
+        // 16 -> hex "10" (even length 2) -> "10" (no padding)
+        const payload = await createPurchaseTransaction("TOK-1", 1, 16);
+        // Arg 3 is Quantity
+        const args = payload.data.split("@");
+        expect(args[3]).toBe("10");
+    });
 });
