@@ -1,10 +1,5 @@
 import axios from "axios";
-import fs from "fs";
-import path from "path";
-
-// Load Config
-const configPath = path.join(__dirname, "../../src/config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+import { config } from "../utils/config";
 
 export interface OrderStatus {
     status: "pending" | "success" | "failed" | "unknown";

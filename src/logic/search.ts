@@ -1,6 +1,5 @@
 import axios from "axios";
-import fs from "fs";
-import path from "path";
+import { config } from "../utils/config";
 
 interface Product {
     id: string; // TokenIdentifier-Nonce
@@ -15,19 +14,6 @@ interface Product {
         trust_level: string;
     };
 }
-
-interface Config {
-    marketplaces: Array<{
-        name: string;
-        contracts: string[];
-        trust_level: string;
-    }>;
-    api_url: string;
-}
-
-// Load Config
-const configPath = path.join(__dirname, "../../src/config.json");
-const config: Config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
 export async function searchProducts(
     query: string,

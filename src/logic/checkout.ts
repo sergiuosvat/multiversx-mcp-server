@@ -1,16 +1,4 @@
-import fs from "fs";
-import path from "path";
-
-export interface TransactionPayload {
-    receiver: string;
-    value: string;
-    data: string;
-    gasLimit: number;
-    chainID: string;
-}
-
-const configPath = path.join(__dirname, "../../src/config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+import { config } from "../utils/config";
 
 export async function createPurchaseTransaction(
     tokenIdentifier: string,
