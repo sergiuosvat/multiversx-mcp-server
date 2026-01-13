@@ -59,7 +59,7 @@ describe("MCP Server Integration", () => {
                 arguments: { token_identifier: "T", nonce: 1, quantity: 1 }
             }
         });
-        expect(checkout_1.createPurchaseTransaction).toHaveBeenCalledWith("T", 1, 1);
+        expect(checkout_1.createPurchaseTransaction).toHaveBeenCalledWith("T", 1, 1, undefined);
         expect(JSON.parse(response.content[0].text)).toEqual({ data: "tx" });
     });
     it("should route track_order correctly", async () => {

@@ -7,7 +7,7 @@ exports.createHttpServer = createHttpServer;
 const fastify_1 = __importDefault(require("fastify"));
 const search_1 = require("./logic/search");
 function createHttpServer() {
-    const fastify = (0, fastify_1.default)({ logger: true });
+    const fastify = (0, fastify_1.default)({ logger: false });
     fastify.get("/feed.json", async (request, reply) => {
         // 1. Fetch "Showcase" products (Broad search or curated list)
         // In production, this would iterate over all whitelisted collections.

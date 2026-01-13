@@ -1,11 +1,19 @@
 import { config } from "../utils/config";
 
+export interface TransactionRequest {
+    receiver: string;
+    value: string;
+    data: string;
+    gasLimit: number;
+    chainID: string;
+}
+
 export async function createPurchaseTransaction(
     tokenIdentifier: string,
     nonce: number,
     quantity: number = 1,
     marketplace: string = "default"
-): Promise<TransactionPayload> {
+): Promise<TransactionRequest> {
 
     // 1. Resolve Marketplace Config
     const marketConfig = config.contracts_config[marketplace.toLowerCase()] || config.contracts_config["default"];

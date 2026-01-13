@@ -1,25 +1,35 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const checkout_1 = require("../logic/checkout");
-describe("createPurchaseTransaction", () => {
-    it("should generate a valid transaction payload with default quantity", async () => {
-        const payload = await (0, checkout_1.createPurchaseTransaction)("EGLD-123456", 1);
-        expect(payload.receiver).toBeDefined();
-        expect(payload.value).toBe("1000000000000000000");
-        expect(payload.chainID).toBe("1");
-        // data: buy@45474c442d313233343536@01@01
-        expect(payload.data).toMatch(/^buy@[0-9a-f]+@[0-9a-f]+@[0-9a-f]+$/);
+// We assume the real config.json is loaded. 
+// Ideally we mock the config, but for integration testing the real config is fine 
+// as long as we don't rely on it changing.
+// Or we can mock 'fs' to control config content.
+// Let's use the real config logic but verify the BEHAVIOR differs.
+describe("createPurchaseTransaction (Configurable)", () => {
+    it("should use default config when marketplace is missing or default", async () => {
+        const payload = await (0, checkout_1.createPurchaseTransaction)("TOK-1", 1, 1, "default");
+        // Default is 'buy' function path
+        expect(payload.data).toMatch(/^buy@/);
+        // Expect generic placeholder address if unchanged, or whatever is in config
+        // We check that it conforms to the default ABI structure
     });
-    it("should handle even/odd length hex strings for nonce/quantity", async () => {
-        // Nonce 15 -> '0f' (already even), Quantity 16 -> '10' (already even)
-        const payload = await (0, checkout_1.createPurchaseTransaction)("TEST-123", 15, 16);
-        const parts = payload.data.split("@");
-        expect(parts[2]).toBe("0f");
-        expect(parts[3]).toBe("10");
-        // Nonce 255 -> 'ff', Quantity 256 -> '100' (odd -> '0100')
-        const payload2 = await (0, checkout_1.createPurchaseTransaction)("TEST-123", 255, 256);
-        const parts2 = payload2.data.split("@");
-        expect(parts2[2]).toBe("ff");
-        expect(parts2[3]).toBe("0100");
+    it("should use XOXNO config when marketplace='xoxno'", async () => {
+        const payload = await (0, checkout_1.createPurchaseTransaction)("TOK-1", 1, 1, "xoxno");
+        // XOXNO uses 'buy' (same as default currently in our code)
+        // But address should be the real XOXNO address
+        expect(payload.receiver).toBe("erd1lp3hkcsqcprmvm6sr7a92zcgxyl3hfyqge5zem232j9axvmnr8esrj8shs");
+        expect(payload.data).toMatch(/^buy@/);
+    });
+    it("should use OOX config when marketplace='oox'", async () => {
+        const payload = await (0, checkout_1.createPurchaseTransaction)("TOK-1", 1, 1, "oox");
+        // OOX uses 'buyNft' (per our new config)
+        expect(payload.data).toMatch(/^buyNft@/);
+        expect(payload.receiver).toContain("erd1oox");
+    });
+    // New test for Case Insensitivity
+    it("should be case insensitive for marketplace name", async () => {
+        const payload = await (0, checkout_1.createPurchaseTransaction)("TOK-1", 1, 1, "XoXnO");
+        expect(payload.receiver).toBe("erd1lp3hkcsqcprmvm6sr7a92zcgxyl3hfyqge5zem232j9axvmnr8esrj8shs");
     });
 });

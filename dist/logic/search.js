@@ -5,11 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchProducts = searchProducts;
 const axios_1 = __importDefault(require("axios"));
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-// Load Config
-const configPath = path_1.default.join(__dirname, "../../src/config.json");
-const config = JSON.parse(fs_1.default.readFileSync(configPath, "utf-8"));
+const config_1 = require("../utils/config");
 async function searchProducts(query, collection, limit = 5) {
     const params = {
         search: query,
@@ -23,7 +19,7 @@ async function searchProducts(query, collection, limit = 5) {
     try {
         // 1. Query Public API for Tokens/NFTs
         // Note: The specific /nfts endpoint supports search.
-        const url = `${config.api_url}/nfts`;
+        const url = `${config_1.config.api_url}/nfts`;
         const response = await axios_1.default.get(url, { params });
         const items = response.data;
         const products = [];

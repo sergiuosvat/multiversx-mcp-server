@@ -1,16 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPurchaseTransaction = createPurchaseTransaction;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const configPath = path_1.default.join(__dirname, "../../src/config.json");
-const config = JSON.parse(fs_1.default.readFileSync(configPath, "utf-8"));
+const config_1 = require("../utils/config");
 async function createPurchaseTransaction(tokenIdentifier, nonce, quantity = 1, marketplace = "default") {
     // 1. Resolve Marketplace Config
-    const marketConfig = config.contracts_config[marketplace.toLowerCase()] || config.contracts_config["default"];
+    const marketConfig = config_1.config.contracts_config[marketplace.toLowerCase()] || config_1.config.contracts_config["default"];
     const { address, abi } = marketConfig;
     // 2. Prepare Arguments
     const tokenHex = Buffer.from(tokenIdentifier).toString("hex");

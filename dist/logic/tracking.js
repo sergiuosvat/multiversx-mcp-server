@@ -5,17 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.trackOrder = trackOrder;
 const axios_1 = __importDefault(require("axios"));
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-// Load Config
-const configPath = path_1.default.join(__dirname, "../../src/config.json");
-const config = JSON.parse(fs_1.default.readFileSync(configPath, "utf-8"));
+const config_1 = require("../utils/config");
 async function trackOrder(txHash) {
     if (!txHash) {
         return { status: "unknown", details: "No hash provided" };
     }
     try {
-        const url = `${config.api_url}/transactions/${txHash}`;
+        const url = `${config_1.config.api_url}/transactions/${txHash}`;
         const response = await axios_1.default.get(url);
         const tx = response.data;
         // Map MultiversX status to UCP status
