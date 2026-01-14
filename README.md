@@ -9,6 +9,7 @@ Exposes the following tools to connected AI Agents:
 *   `search_products`: Find NFTs and SFTs on-chain (Passive Indexing).
 *   `create_purchase_transaction`: Generates unsigned transaction payloads for buying assets. Supports configurable ABIs (e.g., `buy` vs `buyNft`).
 *   `track_order`: Stateless tracking of transaction status on the blockchain.
+*   `generate_guarded_tx`: (V2) Generates a transaction payload for **Agent-as-Guardian** co-signing flows. See [V2 Spec](docs/SPEC_V2_GUARDIAN.md).
 
 ### 2. Google Shopping Feed (HTTP)
 *   **Endpoint**: `GET /feed.json`
