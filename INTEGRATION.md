@@ -1,82 +1,32 @@
-# MultiversX UCP Integration Guide
+# MultiversX MCP Server Integration Guide
 
-This guide details how to integrate your Marketplace or dApp with the **Universal Commerce Protocol (UCP)** ecosystem on MultiversX.
+## 1. Overview
+The `multiversx-mcp-server` enables AI Agents (Claude, ChatGPT - UCP Mode) to interact with the MultiversX blockchain.
 
-## Overview
+## 2. Tools
+### `search_products`
+*   **Description**: Find NFTs/SFTs by collection or query.
+*   **Use Case**: Agent finding items to buy.
 
-The UCP layer (implemented via `multiversx-mcp-server`) allows your on-chain assets to be:
-1.  **Discovered**: By AI Agents (Claude, Gemini) and Google Shopping.
-2.  **Purchased**: By generating standardized transaction payloads that agents can hand off to users.
+### `create_purchase_transaction`
+*   **Description**: user-signed transaction to buy an item.
+*   **Use Case**: Standard checkout.
 
-## Integration Steps
+### `generate_guarded_tx` (V2)
+*   **Description**: Relayed Transaction V3 with Guardian Co-Signature.
+*   **Use Case**: High-value autonomous agents acting as On-Chain Guardians.
 
-### 1. Whitelisting (The Configuration)
-To prevent fraud, the MCP server only recommends assets from "Trusted Contracts". You must add your Smart Contract to the `src/config.json` of the server instance (or submit a PR to the official instance).
+## 3. Integration Data
 
-**File**: `src/config.json`
+### Merchant Setup
+1.  **Whitelist**: Add your contract ABI to `src/config.json`.
+2.  **Feed**: Ensure your items are indexed or provide a Google Product Feed via `GET /feed.json`.
 
-```json
-{
-  "contracts_config": {
-    "your_marketplace_id": {
-      "address": "erd1...",
-      "abi": {
-        "function": "buyNft",
-        "args_order": ["token_identifier", "nonce", "quantity"]
-      }
-    }
-  }
-}
-```
+### Guardian Setup (V2)
+1.  User sets Agent Address as Guardian.
+2.  Agent uses `generate_guarded_tx` to create payloads.
+3.  Both User and Agent sign.
+4.  Transaction broadcast with `version: 2, options: 2`.
 
-*   **`function`**: The name of your SC function to call for purchasing.
-*   **`args_order`**: The order of arguments your function expects. Supported dynamic args: `token_identifier`, `nonce`, `quantity`.
-
-### 2. Google Shopping Feed (Path A)
-Once configured, your items will automatically appear in the generated Product Feed.
-
-*   **Endpoint**: `GET /feed.json`
-*   **Validation**: Ensure your metadata (title, image) is standard. The server automatically maps on-chain metadata to the Google Merchant Center schema.
-
-### 3. Verification
-Use the `create_purchase_transaction` tool to verify that the server generates the correct transaction data for your contract.
-
-```json
-// Tool Input
-{
-  "name": "create_purchase_transaction",
-  "arguments": {
-    "marketplace": "your_marketplace_id",
-    "token_identifier": "TEST-123",
-    "nonce": 1,
-    "quantity": 1
-  }
-}
-```
-
-**Expected Data Output**: `buyNft@544553542d313233@01@01` (Hex encoded arguments separated by `@`).
-
-## 3. High-Assurance Security (Guardians V2)
-
-For high-value agents, we support the **MultiversX Guardian Protocol**.
-
-### Concept
-Instead of giving the Agent your Private Key, you set the Agent's Address as your **On-Chain Guardian**. The Agent then co-signs transactions.
-
-### Integration
-1.  **Set Guardian**: User sets Agent Address as Guardian (20 day cooldown).
-2.  **Generate Payload**: Use the `generate_guarded_tx` tool.
-    ```json
-    {
-      "name": "generate_guarded_tx",
-      "arguments": {
-        "sender": "erd1user...",
-        "guardian_address": "erd1agent...",
-        "nonce": 10,
-        "data": "buy@...",
-        "value": "0",
-        "receiver": "erd1merchant..."
-      }
-    }
-    ```
-3.  **Execution**: The tool returns a `Transaction` object with `version: 2` and `options: 2` (Guarded). The Agent signs this hash, and the User signs the same hash. Both signatures are required for broadcast.
+## 4. Verification
+Run `npm test` to verify tool logic.
