@@ -55,3 +55,28 @@ Use the `create_purchase_transaction` tool to verify that the server generates t
 ```
 
 **Expected Data Output**: `buyNft@544553542d313233@01@01` (Hex encoded arguments separated by `@`).
+
+## 3. High-Assurance Security (Guardians V2)
+
+For high-value agents, we support the **MultiversX Guardian Protocol**.
+
+### Concept
+Instead of giving the Agent your Private Key, you set the Agent's Address as your **On-Chain Guardian**. The Agent then co-signs transactions.
+
+### Integration
+1.  **Set Guardian**: User sets Agent Address as Guardian (20 day cooldown).
+2.  **Generate Payload**: Use the `generate_guarded_tx` tool.
+    ```json
+    {
+      "name": "generate_guarded_tx",
+      "arguments": {
+        "sender": "erd1user...",
+        "guardian_address": "erd1agent...",
+        "nonce": 10,
+        "data": "buy@...",
+        "value": "0",
+        "receiver": "erd1merchant..."
+      }
+    }
+    ```
+3.  **Execution**: The tool returns a `Transaction` object with `version: 2` and `options: 2` (Guarded). The Agent signs this hash, and the User signs the same hash. Both signatures are required for broadcast.

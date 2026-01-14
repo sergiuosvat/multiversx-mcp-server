@@ -6,6 +6,7 @@ import {
 import { searchProducts } from "./logic/search";
 import { createPurchaseTransaction } from "./logic/checkout";
 import { trackOrder } from "./logic/tracking";
+import { createGuardianTransaction } from "./logic/guardians";
 
 export const MCP_SERVER_NAME = "multiversx-mcp-server";
 export const MCP_SERVER_VERSION = "0.1.0";
@@ -60,8 +61,24 @@ export function createMcpServer() {
                         type: "object",
                         properties: {
                             transaction_hash: { type: "string" },
+                            required: ["transaction_hash"],
                         },
-                        required: ["transaction_hash"],
+                    },
+                },
+                {
+                    name: "generate_guarded_tx",
+                    description: "Generate a transaction requiring Guardian Co-Signature.",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            sender: { type: "string" },
+                            receiver: { type: "string" },
+                            value: { type: "string" },
+                            data: { type: "string" },
+                            guardian_address: { type: "string" },
+                            nonce: { type: "number" }
+                        },
+                        required: ["sender", "receiver", "guardian_address", "nonce"]
                     },
                 },
             ],
@@ -97,6 +114,14 @@ export function createMcpServer() {
             const status = await trackOrder(transaction_hash);
             return {
                 content: [{ type: "text", text: JSON.stringify(status, null, 2) }],
+            };
+        }
+
+        if (name === "generate_guarded_tx") {
+            const args = request.params.arguments as any;
+            const tx = await createGuardianTransaction(args);
+            return {
+                content: [{ type: "text", text: JSON.stringify(tx, null, 2) }],
             };
         }
 
