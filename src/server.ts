@@ -7,11 +7,31 @@ import { searchProducts } from "./logic/search";
 import { createPurchaseTransaction } from "./logic/checkout";
 import { trackOrder } from "./logic/tracking";
 import { createGuardianTransaction } from "./logic/guardians";
+import { getWalletAddressFromPath } from "./logic/wallet";
+import { getAccountBalance, getAccountDetails } from "./logic/accounts";
+import { createEgldTransfer, createTokenTransfer } from "./logic/transfers";
 
 export const MCP_SERVER_NAME = "multiversx-mcp-server";
 export const MCP_SERVER_VERSION = "0.1.0";
 
+const NETWORK_API_URLS: Record<string, string> = {
+    mainnet: "https://api.multiversx.com",
+    devnet: "https://devnet-api.multiversx.com",
+    testnet: "https://testnet-api.multiversx.com",
+};
+
+const NETWORK_CHAIN_IDS: Record<string, string> = {
+    mainnet: "1",
+    devnet: "D",
+    testnet: "T",
+};
+
 export function createMcpServer() {
+    const network = process.env.MVX_NETWORK || "mainnet";
+    const apiUrl = NETWORK_API_URLS[network] || NETWORK_API_URLS.mainnet;
+    const chainId = NETWORK_CHAIN_IDS[network] || "1";
+    const walletPath = process.env.MVX_WALLET;
+
     const server = new Server(
         {
             name: MCP_SERVER_NAME,
@@ -81,6 +101,65 @@ export function createMcpServer() {
                         required: ["sender", "receiver", "guardian_address", "nonce"]
                     },
                 },
+                {
+                    name: "get_balance",
+                    description: "Fetch the EGLD balance of an address.",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            address: { type: "string" },
+                        },
+                        required: ["address"],
+                    },
+                },
+                {
+                    name: "query_account",
+                    description: "Fetch detailed account information (balance, nonce, shard, etc.).",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            address: { type: "string" },
+                        },
+                        required: ["address"],
+                    },
+                },
+                {
+                    name: "send_egld",
+                    description: "Generate an unsigned transaction to send EGLD.",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            sender: { type: "string" },
+                            receiver: { type: "string" },
+                            value: { type: "string" },
+                            nonce: { type: "number" },
+                        },
+                        required: ["sender", "receiver", "value", "nonce"],
+                    },
+                },
+                {
+                    name: "send_tokens",
+                    description: "Generate an unsigned transaction to send ESDT tokens.",
+                    inputSchema: {
+                        type: "object",
+                        properties: {
+                            sender: { type: "string" },
+                            receiver: { type: "string" },
+                            token_identifier: { type: "string" },
+                            amount: { type: "string" },
+                            nonce: { type: "number" },
+                        },
+                        required: ["sender", "receiver", "token_identifier", "amount", "nonce"],
+                    },
+                },
+                {
+                    name: "get_wallet_address",
+                    description: "Get the address of the wallet configured in the environment (via MVX_WALLET).",
+                    inputSchema: {
+                        type: "object",
+                        properties: {},
+                    },
+                },
             ],
         };
     });
@@ -118,10 +197,64 @@ export function createMcpServer() {
         }
 
         if (name === "generate_guarded_tx") {
-            const args = request.params.arguments as any;
-            const tx = await createGuardianTransaction(args);
+            const tx = await createGuardianTransaction(args as any);
             return {
                 content: [{ type: "text", text: JSON.stringify(tx, null, 2) }],
+            };
+        }
+
+        if (name === "get_balance") {
+            const { address } = args as any;
+            const balance = await getAccountBalance(apiUrl, address);
+            return {
+                content: [{ type: "text", text: JSON.stringify({ balance }, null, 2) }],
+            };
+        }
+
+        if (name === "query_account") {
+            const { address } = args as any;
+            const details = await getAccountDetails(apiUrl, address);
+            return {
+                content: [{ type: "text", text: JSON.stringify(details, null, 2) }],
+            };
+        }
+
+        if (name === "send_egld") {
+            const { sender, receiver, value, nonce } = args as any;
+            const tx = await createEgldTransfer({
+                sender,
+                receiver,
+                value,
+                nonce,
+                chainId,
+            });
+            return {
+                content: [{ type: "text", text: JSON.stringify(tx, null, 2) }],
+            };
+        }
+
+        if (name === "send_tokens") {
+            const { sender, receiver, token_identifier, amount, nonce } = args as any;
+            const tx = await createTokenTransfer({
+                sender,
+                receiver,
+                tokenIdentifier: token_identifier,
+                amount,
+                nonce,
+                chainId,
+            });
+            return {
+                content: [{ type: "text", text: JSON.stringify(tx, null, 2) }],
+            };
+        }
+
+        if (name === "get_wallet_address") {
+            if (!walletPath) {
+                throw new Error("MVX_WALLET environment variable is not set.");
+            }
+            const address = await getWalletAddressFromPath(walletPath);
+            return {
+                content: [{ type: "text", text: JSON.stringify({ address }, null, 2) }],
             };
         }
 

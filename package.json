@@ -18,6 +18,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
     "@multiversx/sdk-core": "^15.3.2",
+    "@multiversx/sdk-wallet": "^4.6.0",
     "@types/node": "^25.0.7",
     "axios": "^1.13.2",
     "axon": "^2.0.3",

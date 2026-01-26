@@ -1,4 +1,4 @@
-import { Transaction, TransactionPayload, Address } from "@multiversx/sdk-core";
+import { Transaction, Address } from "@multiversx/sdk-core";
 
 export interface GuardianTxRequest {
     sender: string;
@@ -9,26 +9,26 @@ export interface GuardianTxRequest {
     nonce: number;
 }
 
+/**
+ * Creates a transaction requiring Guardian Co-Signature.
+ * Compatibility fix for sdk-core v15.3.2.
+ */
 export async function createGuardianTransaction(req: GuardianTxRequest): Promise<any> {
+    const data = new TextEncoder().encode(req.data);
+
     // 1. Construct Basic Transaction
     const tx = new Transaction({
-        nonce: req.nonce,
-        value: req.value,
-        receiver: new Address(req.receiver),
-        sender: new Address(req.sender),
-        gasLimit: 50000000, // Safe default for Guardian txs
-        data: new TransactionPayload(req.data),
-        chainID: "1" // Default Mainnet, config should override
+        nonce: BigInt(req.nonce),
+        value: BigInt(req.value),
+        receiver: Address.newFromBech32(req.receiver),
+        sender: Address.newFromBech32(req.sender),
+        gasLimit: BigInt(50000000), // Safe default for Guardian txs
+        data: data,
+        chainID: "1", // Default Mainnet, config should override
+        version: 2, // Protocol V2
+        options: 2, // Guarded option bit (Bit 1)
+        guardian: Address.newFromBech32(req.guardian_address)
     });
-
-    // 2. Configure for Guardians (Protocol V2)
-    tx.setVersion(2);
-    // Set "Guarded" option bit (Bit 1)
-    // In SDK, TransactionOptions.Guarded = 2
-    tx.setOptions(2);
-
-    // 3. Set Guardian Address (Metadata)
-    tx.setGuardian(new Address(req.guardian_address));
 
     return tx.toPlainObject();
 }
