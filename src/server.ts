@@ -14,7 +14,7 @@ import {
     createRelayedV3, createRelayedV3ToolName, createRelayedV3ToolDescription, createRelayedV3ParamScheme,
     trackTransaction, trackTransactionToolName, trackTransactionToolDescription, trackTransactionParamScheme,
     searchProducts, searchProductsToolName, searchProductsToolDescription, searchProductsParamScheme,
-} from "./tools/index.js";
+} from "./tools/index";
 
 // Helper to cast tool results to avoid strict TZ index signature issues
 // The SDK expects [key: string]: unknown, which our strict ToolResult interfaces don't have

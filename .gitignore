@@ -1,1 +1,8 @@
 node_modules
+dist
+*.pem
+wallets/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

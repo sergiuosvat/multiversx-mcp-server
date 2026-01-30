@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1769767094006" clover="3.2.0">
-  <project timestamp="1769767094006" name="All files">
+<coverage generated="1769768218709" clover="3.2.0">
+  <project timestamp="1769768218709" name="All files">
     <metrics statements="123" coveredstatements="111" conditionals="27" coveredconditionals="16" methods="4" coveredmethods="4" elements="154" coveredelements="131" complexity="0" loc="123" ncloc="123" packages="1" files="5" classes="5"/>
     <file name="constants.ts" path="/Users/robertsasu/RustProjects/agentic-payments/multiversx-mcp-server/src/tools/constants.ts">
       <metrics statements="7" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
