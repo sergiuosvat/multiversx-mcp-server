@@ -1,0 +1,62 @@
+import { issueFungible } from "../../tools/issueFungible";
+
+// Mock SDK
+jest.mock("@multiversx/sdk-core", () => {
+    return {
+        TransactionsFactoryConfig: jest.fn(),
+        TransactionComputer: jest.fn().mockImplementation(() => ({
+            computeBytesForSigning: jest.fn().mockReturnValue(Buffer.from("mock-bytes")),
+        })),
+        TokenManagementTransactionsFactory: jest.fn().mockImplementation(() => ({
+            createTransactionForIssuingFungible: jest.fn().mockResolvedValue({}),
+            awaitCompletedIssueFungible: jest.fn().mockResolvedValue([{ tokenIdentifier: "TOKEN-123456" }]),
+        })),
+    };
+});
+
+jest.mock("../../tools/networkConfig", () => ({
+    loadNetworkConfig: jest.fn().mockReturnValue({ chainId: "D", explorerUrl: "https://devnet-explorer.multiversx.com" }),
+    createNetworkProvider: jest.fn().mockReturnValue({
+        getAccount: jest.fn().mockResolvedValue({
+            address: { toBech32: () => "sender-addr" },
+            nonce: 0,
+        }),
+        sendTransaction: jest.fn().mockResolvedValue("mock-tx-hash"),
+    }),
+}));
+
+const mockWalletConfig = {
+    mode: "signed",
+    pemPath: "test.pem",
+};
+
+jest.mock("../../tools/walletConfig", () => ({
+    loadWalletConfig: jest.fn().mockImplementation(() => mockWalletConfig),
+    loadAccountFromPem: jest.fn().mockResolvedValue({
+        address: { toBech32: () => "sender-addr" },
+        nonce: 0,
+        getNonceThenIncrement: jest.fn().mockReturnValue(10),
+    }),
+    loadWalletFromPem: jest.fn().mockReturnValue({
+        address: { toBech32: () => "sender-addr" },
+        signer: { sign: jest.fn().mockResolvedValue(Buffer.from("signature")) },
+    }),
+    isSigningEnabled: jest.fn().mockImplementation((config) => config.mode === "signed" && !!config.pemPath),
+}));
+
+describe("issueFungible", () => {
+    it("should return error if unsigned mode", async () => {
+        mockWalletConfig.mode = "unsigned";
+        const result = await issueFungible("Token", "TKN", "1000", 18);
+        expect(result.content[0].text).toContain("Signing mode required");
+    });
+
+    it("should issue token in signed mode", async () => {
+        mockWalletConfig.mode = "signed";
+        mockWalletConfig.pemPath = "test.pem";
+
+        const result = await issueFungible("Token", "TKN", "1000", 18);
+        expect(result.content[0].text).toContain("Token issuance transaction sent");
+        expect(result.content[0].text).toContain("mock-tx-hash");
+    });
+});
