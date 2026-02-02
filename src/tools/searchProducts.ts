@@ -1,5 +1,11 @@
+/**
+ * Search for NFTs/SFTs (Products)
+ */
+
+import { z } from "zod";
 import axios from "axios";
-import { config } from "../utils/config";
+import { ToolResult } from "./types";
+import { loadNetworkConfig } from "./networkConfig";
 
 interface Product {
     id: string; // TokenIdentifier-Nonce
@@ -15,16 +21,20 @@ interface Product {
     };
 }
 
+/**
+ * Search for NFTs/SFTs using the MultiversX API.
+ * Uses axios directly as SDK doesn't expose full NFT search with all params easily.
+ */
 export async function searchProducts(
     query: string,
     collection?: string,
     limit: number = 5
-): Promise<Product[]> {
+): Promise<ToolResult> {
+    const config = loadNetworkConfig();
     const params: any = {
         search: query,
         size: limit,
         type: "NonFungibleESDT,SemiFungibleESDT",
-        // We ideally filter by 'onSale' if the API supports it, or we filter results manually
     };
 
     if (collection) {
@@ -32,21 +42,13 @@ export async function searchProducts(
     }
 
     try {
-        // 1. Query Public API for Tokens/NFTs
-        // Note: The specific /nfts endpoint supports search.
-        const url = `${config.api_url}/nfts`;
+        const url = `${config.apiUrl}/nfts`;
         const response = await axios.get(url, { params });
         const items = response.data;
 
         const products: Product[] = [];
 
         for (const item of items) {
-            // 2. Filter / Validate
-            // In a real Passive Indexer, we would check if the current owner is a Whitelisted Contract
-            // or if the item has a "sale" attribute.
-            // For this MVP, we map the API response directly.
-
-            // Heuristic: Check if basic metadata exists
             if (!item.identifier) continue;
 
             let description = "No description";
@@ -54,7 +56,7 @@ export async function searchProducts(
                 description = "Attributes present";
             }
 
-            let price = "Not on sale (or auction)";
+            let price = "Not on sale";
             if (item.price) {
                 price = `${item.price} atomic units`;
             }
@@ -81,9 +83,26 @@ export async function searchProducts(
             });
         }
 
-        return products;
+        return {
+            content: [{ type: "text", text: JSON.stringify(products, null, 2) }],
+        };
     } catch (error) {
-        console.error("Search API Error:", error);
-        return [];
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify({ error: `Search API Error: ${message}`, results: [] }),
+                },
+            ],
+        };
     }
 }
+
+export const searchProductsToolName = "search-products";
+export const searchProductsToolDescription = "Search for NFTs/SFTs (products) on MultiversX";
+export const searchProductsParamScheme = {
+    query: z.string().describe("Search query string"),
+    collection: z.string().optional().describe("Filter by collection identifier"),
+    limit: z.number().optional().default(5).describe("Max results to return"),
+};

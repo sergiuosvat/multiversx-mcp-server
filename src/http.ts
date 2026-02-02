@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import { searchProducts } from "./logic/search";
+import { searchProducts } from "./tools/searchProducts";
 
 export function createHttpServer() {
     const fastify = Fastify({ logger: false });
@@ -8,11 +8,12 @@ export function createHttpServer() {
         // 1. Fetch "Showcase" products (Broad search or curated list)
         // In production, this would iterate over all whitelisted collections.
         // For MVP, we search for a default keyword or list all.
-        const products = await searchProducts("EGLD", undefined, 50);
+        const result = await searchProducts("EGLD", undefined, 50);
+        const products = JSON.parse(result.content[0].text);
 
         // 2. Map to Google Merchant Center Feed Schema (JSON)
         // Ref: https://developers.google.com/shopping-content/guides/products/feed-tso
-        const feedItems = products.map((p) => ({
+        const feedItems = products.map((p: any) => ({
             id: p.id,
             title: p.name,
             description: p.description,

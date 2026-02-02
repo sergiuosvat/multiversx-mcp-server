@@ -11,5 +11,5 @@ module.exports = {
             statements: 90
         }
     },
-    modulePathIgnorePatterns: ["<rootDir>/dist/"]
+    modulePathIgnorePatterns: ["<rootDir>/dist/", "<rootDir>/src/__tests__/e2e/"]
 };

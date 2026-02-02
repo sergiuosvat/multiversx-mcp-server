@@ -2,22 +2,16 @@
 
 The official **Model Context Protocol (MCP)** server for the MultiversX Blockchain. This server enables AI Agents (Claude, Gemini, etc.) to securely interact with the blockchain and allows products to be indexed by Google Shopping via specific feeds.
 
-## Features
+## 🚀 Features
 
-### 1. Agent Tools (MCP Stdio)
-Exposes the following tools to connected AI Agents:
-*   `search_products`: Find NFTs and SFTs on-chain (Passive Indexing).
-*   `create_purchase_transaction`: Generates unsigned transaction payloads for buying assets. Supports configurable ABIs (e.g., `buy` vs `buyNft`).
-*   `track_order`: Stateless tracking of transaction status on the blockchain.
-*   `generate_guarded_tx`: (V2) Generates a transaction payload for **Agent-as-Guardian** co-signing flows. See [V2 Spec](docs/SPEC_V2_GUARDIAN.md).
+- **14 Comprehensive Tools**: Cover everything from account queries to batch transfers and token issuance.
+- **Relayed V3 Support**: Native support for gas-sponsored transactions.
+- **Modular Architecture**: Easy to extend or integrate into custom agents.
+- **Dual Mode**: Runs via Stdio (for desktop agents) or HTTP (for web services/Google Shopping feeds).
 
-### 2. Google Shopping Feed (HTTP)
-*   **Endpoint**: `GET /feed.json`
-*   **Format**: Google Merchant Center JSON Schema (Path A compliance).
-*   **Usage**: Submit this URL to Google Merchant Center to list your on-chain assets in "Shop with AI".
+## quick-start-integration-guide
 
-## Installation
-
+### 1. Installation
 ```bash
 git clone https://github.com/multiversx/multiversx-mcp-server.git
 cd multiversx-mcp-server
@@ -25,47 +19,40 @@ npm install
 npm run build
 ```
 
-## Configuration
-The server is driven by `src/config.json`. You can configure trusted marketplaces and their specific smart contract ABIs.
-
-```json
-{
-  "contracts_config": {
-    "xoxno": {
-      "address": "erd1...", 
-      "abi": {
-        "function": "buy",
-        "args_order": ["token_identifier", "nonce", "quantity"]
-      }
-    }
-  }
-}
+### 2. Configuration
+Create a `.env` file (see `.env.example`):
+```env
+MVX_NETWORK=devnet
+MVX_SIGNING_MODE=signed
+MVX_WALLET_PEM=./wallets/my-wallet.pem
 ```
 
-## Usage
+### 3. Usage
+- **MCP Stdio**: Add to your MCP client config (e.g., `claude_desktop_config.json`).
+- **HTTP Mode**: `npm start http` - Access Google Feed at `/feed.json`.
 
-### Run as MCP Server (for Claude Desktop / Agent Runner)
-Add this to your `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "multiversx": {
-      "command": "node",
-      "args": ["/path/to/multiversx-mcp-server/dist/index.js", "mcp"]
-    }
-  }
-}
-```
+## 🛠 Available Tools
 
-### Run as HTTP Server (for Google Feed)
+| Category | Tools |
+| --- | --- |
+| **Account** | `get-balance`, `query-account` |
+| **Transfers** | `send-egld`, `send-tokens`, `send-egld-to-multiple`, `send-tokens-to-multiple` |
+| **Tokens** | `issue-fungible-token`, `issue-nft-collection`, `issue-sft-collection`, `create-nft` |
+| **Advanced** | `create-relayed-v3`, `track-transaction`, `search-products` |
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md) - System design and data flow.
+- [API Reference](docs/API_REFERENCE.md) - Detailed tool specifications and examples.
+- [Integration Guide](docs/INTEGRATION_GUIDE.md) - Setup for Claude Desktop and custom clients.
+- [RelayedV3 Spec](docs/specs/RELAYED_V3.md) - Technical deep-dive into gas-sponsored transactions.
+- [E2E Testing Guide](docs/E2E_GUIDE.md) - How to run and verify the test suite.
+
+## 🧪 Testing
 ```bash
-# Starts server on port 3000 (default)
-npm run start:http
-```
-Access the feed at: `http://localhost:3000/feed.json`
-
-## Testing
-Run the comprehensive test suite (including End-to-End integration tests):
-```bash
+# Run unit tests
 npm test
+
+# Run E2E tests (Playwright)
+npx playwright test src/__tests__/e2e
 ```
