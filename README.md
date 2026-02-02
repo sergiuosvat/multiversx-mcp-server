@@ -8,6 +8,7 @@ The official **Model Context Protocol (MCP)** server for the MultiversX Blockcha
 - **Relayed V3 Support**: Native support for gas-sponsored transactions.
 - **Modular Architecture**: Easy to extend or integrate into custom agents.
 - **Dual Mode**: Runs via Stdio (for desktop agents) or HTTP (for web services/Google Shopping feeds).
+- **UCP Compliant**: Implements Universal Commerce Protocol for Agentic Commerce discovery.
 
 ## quick-start-integration-guide
 
@@ -29,7 +30,20 @@ MVX_WALLET_PEM=./wallets/my-wallet.pem
 
 ### 3. Usage
 - **MCP Stdio**: Add to your MCP client config (e.g., `claude_desktop_config.json`).
-- **HTTP Mode**: `npm start http` - Access Google Feed at `/feed.json`.
+- **HTTP Mode**: Run `npm start http` to enable web-native features:
+  - **UCP Manifest**: `/.well-known/ucp` (Standard Discovery)
+  - **Google Shopping Feed**: `/feed.json`
+  - **ACP Products**: `/.well-known/acp/products.json`
+
+## 🧩 UCP Discovery & Usage
+
+This server is **UCP-compliant**. To allow AI agents to discover this connector:
+1. Deploy the server to a public URL (e.g., `https://agent-payments.example.com`).
+2. Ensure it is running in **HTTP Mode**.
+3. Point ucp-compatible agents to `https://[your-domain]/.well-known/ucp`.
+
+The manifest links UCP capabilities (like `dev.ucp.payment.process`) directly to our MCP tools.
+
 
 ## 🛠 Available Tools
 
