@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { searchProducts } from "./tools/searchProducts";
 import { loadWhitelist } from "./utils/whitelistRegistry";
+import { MULTIVERSX_UCP_MANIFEST } from "./ucp/manifest";
 
 export function createHttpServer() {
     const fastify = Fastify({ logger: false });
@@ -41,6 +42,10 @@ export function createHttpServer() {
 
     fastify.get("/feed.json", feedHandler);
     fastify.get("/.well-known/acp/products.json", feedHandler);
+
+    fastify.get("/.well-known/ucp", async () => {
+        return MULTIVERSX_UCP_MANIFEST;
+    });
 
     fastify.get("/health", async () => {
         return { status: "ok", service: "multiversx-mcp-server-http" };

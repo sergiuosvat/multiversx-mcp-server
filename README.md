@@ -8,6 +8,7 @@ The official **Model Context Protocol (MCP)** server for the MultiversX Blockcha
 - **Relayed V3 Support**: Native support for gas-sponsored transactions.
 - **Modular Architecture**: Easy to extend or integrate into custom agents.
 - **Dual Mode**: Runs via Stdio (for desktop agents) or HTTP (for web services/Google Shopping feeds).
+- **UCP Compliant**: Implements Universal Commerce Protocol for Agentic Commerce discovery.
 
 ## quick-start-integration-guide
 
@@ -29,7 +30,7 @@ MVX_WALLET_PEM=./wallets/my-wallet.pem
 
 ### 3. Usage
 - **MCP Stdio**: Add to your MCP client config (e.g., `claude_desktop_config.json`).
-- **HTTP Mode**: `npm start http` - Access Google Feed at `/feed.json`.
+- **HTTP Mode**: `npm start http` - Access Google Feed at `/feed.json` and UCP Manifest at `/.well-known/ucp`.
 
 ## 🛠 Available Tools
 

@@ -7,6 +7,7 @@ exports.createHttpServer = createHttpServer;
 const fastify_1 = __importDefault(require("fastify"));
 const searchProducts_1 = require("./tools/searchProducts");
 const whitelistRegistry_1 = require("./utils/whitelistRegistry");
+const manifest_1 = require("./ucp/manifest");
 function createHttpServer() {
     const fastify = (0, fastify_1.default)({ logger: false });
     const feedHandler = async (request, reply) => {
@@ -42,6 +43,9 @@ function createHttpServer() {
     };
     fastify.get("/feed.json", feedHandler);
     fastify.get("/.well-known/acp/products.json", feedHandler);
+    fastify.get("/.well-known/ucp", async () => {
+        return manifest_1.MULTIVERSX_UCP_MANIFEST;
+    });
     fastify.get("/health", async () => {
         return { status: "ok", service: "multiversx-mcp-server-http" };
     });
