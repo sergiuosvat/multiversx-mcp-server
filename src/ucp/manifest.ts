@@ -1,27 +1,4 @@
-
 import { UCPManifest } from "./types";
+import manifestJson from "../../ucp.json";
 
-export const MULTIVERSX_UCP_MANIFEST: UCPManifest = {
-    ucp_version: "1.0.0",
-    id: "multiversx-agent-connector",
-    name: "MultiversX Agent Connector",
-    description: "Official MultiversX Adapter for Agentic Payments",
-    capabilities: {
-        "dev.ucp.discovery": {
-            description: "Discover available commerce capabilities",
-            endpoint: "/.well-known/ucp"
-        },
-        "dev.ucp.identity": {
-            description: "Assert agent identity via MultiversX address",
-            mcp_tool_name: "get_wallet_address"
-        },
-        "dev.ucp.payment.process": {
-            description: "Process a payment on MultiversX blockchain",
-            mcp_tool_name: "send_egld"
-        },
-        "dev.ucp.wallet.connect": {
-            description: "Connect a MultiversX wallet",
-            mcp_tool_name: "get_wallet_address"
-        }
-    }
-};
+export const MULTIVERSX_UCP_MANIFEST: UCPManifest = manifestJson as unknown as UCPManifest;

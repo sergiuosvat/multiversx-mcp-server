@@ -30,7 +30,20 @@ MVX_WALLET_PEM=./wallets/my-wallet.pem
 
 ### 3. Usage
 - **MCP Stdio**: Add to your MCP client config (e.g., `claude_desktop_config.json`).
-- **HTTP Mode**: `npm start http` - Access Google Feed at `/feed.json` and UCP Manifest at `/.well-known/ucp`.
+- **HTTP Mode**: Run `npm start http` to enable web-native features:
+  - **UCP Manifest**: `/.well-known/ucp` (Standard Discovery)
+  - **Google Shopping Feed**: `/feed.json`
+  - **ACP Products**: `/.well-known/acp/products.json`
+
+## 🧩 UCP Discovery & Usage
+
+This server is **UCP-compliant**. To allow AI agents to discover this connector:
+1. Deploy the server to a public URL (e.g., `https://agent-payments.example.com`).
+2. Ensure it is running in **HTTP Mode**.
+3. Point ucp-compatible agents to `https://[your-domain]/.well-known/ucp`.
+
+The manifest links UCP capabilities (like `dev.ucp.payment.process`) directly to our MCP tools.
+
 
 ## 🛠 Available Tools
 
