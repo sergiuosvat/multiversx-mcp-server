@@ -1,12 +1,8 @@
-/**
- * Create a RelayedV3 transaction
- */
-
 import { z } from "zod";
 import { Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 
 const txComputer = new TransactionComputer();
 
@@ -14,22 +10,12 @@ const txComputer = new TransactionComputer();
  * Acts as a relayer for a signed transaction (RelayedV3).
  * The inner transaction must be already signed by the user.
  * The relayer (this MCP server's wallet) pays for gas by adding its own signature.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function createRelayedV3(
     innerTransaction: any
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for RelayedV3 (relayer wallet needed). Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     try {
         const config = loadNetworkConfig();

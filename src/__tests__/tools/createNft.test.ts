@@ -25,7 +25,6 @@ jest.mock("../../tools/networkConfig", () => ({
 }));
 
 const mockWalletConfig = {
-    mode: "signed",
     pemPath: "test.pem",
 };
 
@@ -35,20 +34,10 @@ jest.mock("../../tools/walletConfig", () => ({
         address: { toBech32: () => "sender-addr" },
         signer: { sign: jest.fn().mockResolvedValue(Buffer.from("signature")) },
     }),
-    isSigningEnabled: jest.fn().mockImplementation((config) => config.mode === "signed" && !!config.pemPath),
 }));
 
 describe("createNft", () => {
-    it("should return error if unsigned mode", async () => {
-        mockWalletConfig.mode = "unsigned";
-        const result = await createNft("COL-123", "NFT Name", 500, "1");
-        expect(result.content[0].text).toContain("Signing mode required");
-    });
-
     it("should mint NFT in signed mode", async () => {
-        mockWalletConfig.mode = "signed";
-        mockWalletConfig.pemPath = "test.pem";
-
         const result = await createNft("COL-123", "NFT Name", 500, "1");
         expect(result.content[0].text).toContain("NFT/SFT creation transaction sent");
         expect(result.content[0].text).toContain("mock-tx-hash");

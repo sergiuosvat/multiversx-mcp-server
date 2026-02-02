@@ -1,12 +1,8 @@
-/**
- * Send EGLD to multiple receiver addresses (airdrop)
- */
-
 import { z } from "zod";
 import { Address, Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { DEFAULT_GAS_LIMIT_EGLD } from "./constants";
 
 const txComputer = new TransactionComputer();
@@ -14,23 +10,13 @@ const txComputer = new TransactionComputer();
 /**
  * Send EGLD to multiple receivers.
  * Creates separate transactions for each receiver and broadcasts them.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function sendEgldToMultipleReceivers(
     amount: string,
     receivers: string[]
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for batch transfers. Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     if (receivers.length === 0) {
         return {

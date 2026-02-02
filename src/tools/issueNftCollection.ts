@@ -1,36 +1,21 @@
-/**
- * Issue a new NFT collection
- */
-
 import { z } from "zod";
 import { TokenManagementTransactionsFactory, TransactionsFactoryConfig, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { ESDT_ISSUE_COST } from "./constants";
 
 const txComputer = new TransactionComputer();
 
 /**
  * Issue a new NFT collection.
- * NFTs have nonce > 0 and quantity = 1 per nonce.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function issueNftCollection(
     tokenName: string,
     tokenTicker: string
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for NFT collection issuance. Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     try {
         const config = loadNetworkConfig();

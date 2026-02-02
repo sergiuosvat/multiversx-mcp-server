@@ -1,19 +1,15 @@
-/**
- * Issue a new fungible ESDT token
- */
-
 import { z } from "zod";
 import { TokenManagementTransactionsFactory, TransactionsFactoryConfig, Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { ESDT_ISSUE_COST } from "./constants";
 
 const txComputer = new TransactionComputer();
 
 /**
  * Issue a new fungible ESDT token.
- * Requires signing mode to be enabled as token issuance involves blockchain state changes.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function issueFungible(
     tokenName: string,
@@ -22,17 +18,6 @@ export async function issueFungible(
     numDecimals: number
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for token issuance. Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     // Validate inputs
     if (tokenName.length < 3 || tokenName.length > 20) {

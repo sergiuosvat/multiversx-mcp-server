@@ -17,7 +17,6 @@ Path: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
       "args": ["-y", "ts-node", "/absolute/path/to/multiversx-mcp-server/src/index.ts"],
       "env": {
         "MVX_NETWORK": "devnet",
-        "MVX_SIGNING_MODE": "signed",
         "MVX_WALLET_PEM": "/path/to/your/wallet.pem"
       }
     }
@@ -61,12 +60,9 @@ const balance = await client.callTool({
 });
 ```
 
-## 4. Signing Modes
+## 4. Signing Transactions
 
-| Mode | Description | Security |
-| --- | --- | --- |
-| `unsigned` | Returns a transaction JSON for external signing. | High (No keys on server) |
-| `signed` | Automatically signs transactions using a PEM file. | Medium (Requires PEM protection) |
+This MCP server is designed for automated agents and scripts. It **always signs transactions** using a PEM file provided via the `MVX_WALLET_PEM` environment variable.
 
-> [!TIP]
-> Use `unsigned` mode for production web apps where users sign with their own wallets (e.g., Extension, xPortal). Use `signed` mode for automated agents or scripts.
+> [!IMPORTANT]
+> The `MVX_WALLET_PEM` environment variable must point to a valid MultiversX wallet PEM file for all transaction-based tools (transfers, token issuance, etc.) to function.

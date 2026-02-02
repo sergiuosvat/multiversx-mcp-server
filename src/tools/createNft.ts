@@ -1,19 +1,15 @@
-/**
- * Create (mint) a new NFT/SFT/Meta-ESDT
- */
-
 import { z } from "zod";
 import { TokenManagementTransactionsFactory, TransactionsFactoryConfig, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { DEFAULT_GAS_LIMIT_NFT } from "./constants";
 
 const txComputer = new TransactionComputer();
 
 /**
  * Create a new NFT/SFT/Meta-ESDT.
- * This effectively mints the token under an existing collection.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function createNft(
     collectionIdentifier: string,
@@ -23,17 +19,6 @@ export async function createNft(
     uris: string[] = []
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for NFT creation. Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     // Validate royalties (0-10000, where 10000 = 100%)
     if (royalties < 0 || royalties > 10000) {

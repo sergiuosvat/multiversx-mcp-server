@@ -1,19 +1,16 @@
-/**
- * Send ESDT/NFT/SFT tokens to a receiver address
- */
-
 import { z } from "zod";
 import { Address, Token, TokenTransfer, TokenTransfersDataBuilder, Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { DEFAULT_GAS_LIMIT_ESDT } from "./constants";
 
 const txComputer = new TransactionComputer();
 
 /**
- * Create and optionally send an ESDT/NFT/SFT transfer transaction.
+ * Create and sign/broadcast an ESDT/NFT/SFT transfer transaction.
  * Supports fungible tokens (nonce=0) and non-fungible/semi-fungible (nonce>0).
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function sendTokens(
     receiver: string,
@@ -50,35 +47,7 @@ export async function sendTokens(
     const dataParts = builder.buildDataPartsForESDTTransfer(transfer);
     const data = new TextEncoder().encode(dataParts.join("@"));
 
-    if (!isSigningEnabled(walletConfig)) {
-        // Unsigned mode: return transaction template
-        const tx = new Transaction({
-            sender: receiverAddr, // placeholder - caller must set
-            receiver: receiverAddr,
-            data,
-            gasLimit: DEFAULT_GAS_LIMIT_ESDT,
-            chainID: config.chainId,
-            nonce: 0n,
-        });
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(
-                        {
-                            message: "Unsigned transaction. Set sender, nonce, and sign before broadcasting.",
-                            transaction: tx.toPlainObject(),
-                        },
-                        null,
-                        2
-                    ),
-                },
-            ],
-        };
-    }
-
-    // Signed mode: load wallet, create, sign and send
+    // load wallet, create, sign and send
     try {
         const wallet = loadWalletFromPem(walletConfig.pemPath!);
         const api = createNetworkProvider(config);

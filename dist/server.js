@@ -1,91 +1,65 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MCP_SERVER_VERSION = exports.MCP_SERVER_NAME = void 0;
-exports.createMcpServer = createMcpServer;
-const index_js_1 = require("@modelcontextprotocol/sdk/server/index.js");
-const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
-const search_1 = require("./logic/search");
-const checkout_1 = require("./logic/checkout");
-const tracking_1 = require("./logic/tracking");
-exports.MCP_SERVER_NAME = "multiversx-mcp-server";
-exports.MCP_SERVER_VERSION = "0.1.0";
-function createMcpServer() {
-    const server = new index_js_1.Server({
-        name: exports.MCP_SERVER_NAME,
-        version: exports.MCP_SERVER_VERSION,
-    }, {
-        capabilities: {
-            tools: {},
-        },
-    });
-    server.setRequestHandler(types_js_1.ListToolsRequestSchema, async () => {
-        return {
-            tools: [
-                {
-                    name: "search_products",
-                    description: "Search for NFTs or Tokens on MultiversX using criteria.",
-                    inputSchema: {
-                        type: "object",
-                        properties: {
-                            query: { type: "string" },
-                            collection: { type: "string" },
-                            limit: { type: "number" },
-                        },
-                        required: ["query"],
-                    },
-                },
-                {
-                    name: "create_purchase_transaction",
-                    description: "Generate an unsigned buy transaction for an item.",
-                    inputSchema: {
-                        type: "object",
-                        properties: {
-                            token_identifier: { type: "string" },
-                            nonce: { type: "number" },
-                            quantity: { type: "number" },
-                            marketplace: { type: "string", description: "Target marketplace (default, xoxno, oox)" }
-                        },
-                        required: ["token_identifier", "nonce"],
-                    },
-                },
-                {
-                    name: "track_order",
-                    description: "Check the status of a blockchain transaction.",
-                    inputSchema: {
-                        type: "object",
-                        properties: {
-                            transaction_hash: { type: "string" },
-                        },
-                        required: ["transaction_hash"],
-                    },
-                },
-            ],
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
         };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_SERVER_NAME = void 0;
+exports.createMcpServer = createMcpServer;
+const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
+const tools = __importStar(require("./tools/index"));
+// Helper to cast tool results to avoid strict TZ index signature issues
+// The SDK expects [key: string]: unknown, which our strict ToolResult interfaces don't have
+const asToolResult = (p) => p;
+exports.MCP_SERVER_NAME = "multiversx-mcp-server";
+function createMcpServer() {
+    const server = new mcp_js_1.McpServer({
+        name: exports.MCP_SERVER_NAME,
+        version: "1.0.0",
     });
-    server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
-        const { name, arguments: args } = request.params;
-        if (name === "search_products") {
-            const { query, collection, limit } = args;
-            const products = await (0, search_1.searchProducts)(query, collection, limit);
-            return {
-                content: [{ type: "text", text: JSON.stringify(products, null, 2) }],
-            };
-        }
-        if (name === "create_purchase_transaction") {
-            const { token_identifier, nonce, quantity, marketplace } = args;
-            const tx = await (0, checkout_1.createPurchaseTransaction)(token_identifier, nonce, quantity, marketplace);
-            return {
-                content: [{ type: "text", text: JSON.stringify(tx, null, 2) }],
-            };
-        }
-        if (name === "track_order") {
-            const { transaction_hash } = args;
-            const status = await (0, tracking_1.trackOrder)(transaction_hash);
-            return {
-                content: [{ type: "text", text: JSON.stringify(status, null, 2) }],
-            };
-        }
-        throw new Error(`Unknown tool: ${name}`);
-    });
+    // Register all tools
+    server.tool(tools.getBalanceToolName, tools.getBalanceToolDescription, tools.getBalanceParamScheme, async ({ address }) => asToolResult(tools.getBalance(address)));
+    server.tool(tools.queryAccountToolName, tools.queryAccountToolDescription, tools.queryAccountParamScheme, async ({ address }) => asToolResult(tools.queryAccount(address)));
+    server.tool(tools.sendEgldToolName, tools.sendEgldToolDescription, tools.sendEgldParamScheme, async ({ receiver, amount }) => asToolResult(tools.sendEgld(receiver, amount)));
+    server.tool(tools.sendTokensToolName, tools.sendTokensToolDescription, tools.sendTokensParamScheme, async ({ receiver, tokenIdentifier, amount, nonce }) => asToolResult(tools.sendTokens(receiver, tokenIdentifier, amount, nonce)));
+    server.tool(tools.issueFungibleToolName, tools.issueFungibleToolDescription, tools.issueFungibleParamScheme, async ({ tokenName, tokenTicker, initialSupply, numDecimals }) => asToolResult(tools.issueFungible(tokenName, tokenTicker, initialSupply, numDecimals)));
+    server.tool(tools.issueNftCollectionToolName, tools.issueNftCollectionToolDescription, tools.issueNftCollectionParamScheme, async ({ tokenName, tokenTicker }) => asToolResult(tools.issueNftCollection(tokenName, tokenTicker)));
+    server.tool(tools.issueSemiFungibleCollectionToolName, tools.issueSemiFungibleCollectionToolDescription, tools.issueSemiFungibleCollectionParamScheme, async ({ tokenName, tokenTicker }) => asToolResult(tools.issueSemiFungibleCollection(tokenName, tokenTicker)));
+    server.tool(tools.issueMetaEsdtCollectionToolName, tools.issueMetaEsdtCollectionToolDescription, tools.issueMetaEsdtCollectionParamScheme, async ({ tokenName, tokenTicker, numDecimals }) => asToolResult(tools.issueMetaEsdtCollection(tokenName, tokenTicker, numDecimals)));
+    server.tool(tools.createNftToolName, tools.createNftToolDescription, tools.createNftParamScheme, async ({ collectionIdentifier, name, royalties, quantity, uris }) => asToolResult(tools.createNft(collectionIdentifier, name, royalties, quantity, uris)));
+    server.tool(tools.sendEgldToMultipleReceiversToolName, tools.sendEgldToMultipleReceiversToolDescription, tools.sendEgldToMultipleReceiversParamScheme, async ({ amount, receivers }) => asToolResult(tools.sendEgldToMultipleReceivers(amount, receivers)));
+    server.tool(tools.sendTokensToMultipleReceiversToolName, tools.sendTokensToMultipleReceiversToolDescription, tools.sendTokensToMultipleReceiversParamScheme, async ({ transfers }) => asToolResult(tools.sendTokensToMultipleReceivers(transfers)));
+    server.tool(tools.createRelayedV3ToolName, tools.createRelayedV3ToolDescription, tools.createRelayedV3ParamScheme, async ({ innerTransaction }) => asToolResult(tools.createRelayedV3(innerTransaction)));
+    server.tool(tools.trackTransactionToolName, tools.trackTransactionToolDescription, tools.trackTransactionParamScheme, async ({ txHash }) => asToolResult(tools.trackTransaction(txHash)));
+    server.tool(tools.searchProductsToolName, tools.searchProductsToolDescription, tools.searchProductsParamScheme, async ({ query, collection, limit }) => asToolResult(tools.searchProducts(query, collection, limit)));
     return server;
 }

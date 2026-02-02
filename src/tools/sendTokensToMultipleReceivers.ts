@@ -1,12 +1,8 @@
-/**
- * Send multiple tokens to multiple receivers (batch ESDT transfers)
- */
-
 import { z } from "zod";
 import { Address, Token, TokenTransfer, TokenTransfersDataBuilder, Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { DEFAULT_GAS_LIMIT_MULTI_TRANSFER } from "./constants";
 
 const txComputer = new TransactionComputer();
@@ -31,22 +27,12 @@ interface ReceiverTransfer {
 /**
  * Send tokens to multiple receivers.
  * Each receiver can receive multiple different tokens in one transaction per receiver.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function sendTokensToMultipleReceivers(
     transfers: ReceiverTransfer[]
 ): Promise<ToolResult> {
     const walletConfig = loadWalletConfig();
-
-    if (!isSigningEnabled(walletConfig)) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: "Signing mode required for batch transfers. Set MVX_SIGNING_MODE=signed and MVX_WALLET_PEM.",
-                },
-            ],
-        };
-    }
 
     if (transfers.length === 0) {
         return {

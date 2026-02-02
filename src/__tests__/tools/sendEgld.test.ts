@@ -31,44 +31,36 @@ jest.mock("../../tools/networkConfig", () => ({
     }),
 }));
 
-const mockWalletConfig: { mode: string; pemPath?: string } = {
-    mode: "unsigned",
+const mockWalletConfig: { pemPath?: string } = {
     pemPath: undefined,
 };
 
 jest.mock("../../tools/walletConfig", () => ({
     loadWalletConfig: jest.fn().mockImplementation(() => mockWalletConfig),
-    loadAccountFromPem: jest.fn().mockResolvedValue({
-        address: { toBech32: () => "sender-addr" },
-        nonce: 0,
-        getNonceThenIncrement: jest.fn().mockReturnValue(10),
-    }),
     loadWalletFromPem: jest.fn().mockReturnValue({
         address: { toBech32: () => "sender-addr" },
         signer: { sign: jest.fn().mockResolvedValue(Buffer.from("signature")) },
     }),
-    isSigningEnabled: jest.fn().mockImplementation((config) => config.mode === "signed"),
 }));
 
 describe("sendEgld", () => {
     beforeEach(() => {
-        mockWalletConfig.mode = "unsigned";
-    });
-
-    it("should return transaction object in unsigned mode", async () => {
-        const result = await sendEgld("erd1receiver", "1000000000000000000");
-        const content = JSON.parse(result.content[0].text);
-
-        expect(content.transaction.value).toBe("1000000000000000000");
-        expect(content.transaction.receiver).toBe("erd1receiver");
-    });
-
-    it("should sign and send in signed mode", async () => {
-        mockWalletConfig.mode = "signed";
         mockWalletConfig.pemPath = "test.pem";
+    });
 
+    it("should sign and send transaction", async () => {
         const result = await sendEgld("erd1receiver", "1000000000000000000");
         expect(result.content[0].text).toContain("Transaction sent");
         expect(result.content[0].text).toContain("mock-tx-hash");
+    });
+
+    it("should handle errors during send", async () => {
+        const { loadWalletFromPem } = require("../../tools/walletConfig");
+        (loadWalletFromPem as jest.Mock).mockImplementationOnce(() => {
+            throw new Error("PEM error");
+        });
+
+        const result = await sendEgld("erd1receiver", "1000000000000000000");
+        expect(result.content[0].text).toContain("Failed to send EGLD: PEM error");
     });
 });

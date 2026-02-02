@@ -6,15 +6,14 @@ import { z } from "zod";
 import { Address, Transaction, TransactionComputer } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, isSigningEnabled, loadWalletFromPem } from "./walletConfig";
+import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
 import { DEFAULT_GAS_LIMIT_EGLD } from "./constants";
 
 const txComputer = new TransactionComputer();
 
 /**
- * Create and optionally send an EGLD transfer transaction.
- * In unsigned mode: returns transaction object for external signing.
- * In signed mode: signs and broadcasts the transaction.
+ * Create and sign/broadcast an EGLD transfer transaction.
+ * Requires MVX_WALLET_PEM to be set.
  */
 export async function sendEgld(receiver: string, amount: string): Promise<ToolResult> {
     let receiverAddr: Address;
@@ -34,35 +33,6 @@ export async function sendEgld(receiver: string, amount: string): Promise<ToolRe
     const config = loadNetworkConfig();
     const walletConfig = loadWalletConfig();
 
-    if (!isSigningEnabled(walletConfig)) {
-        // Unsigned mode: return transaction template
-        const tx = new Transaction({
-            receiver: receiverAddr,
-            sender: receiverAddr, // placeholder - caller must set
-            value: BigInt(amount),
-            gasLimit: DEFAULT_GAS_LIMIT_EGLD,
-            chainID: config.chainId,
-            nonce: 0n,
-        });
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(
-                        {
-                            message: "Unsigned transaction. Set sender, nonce, and sign before broadcasting.",
-                            transaction: tx.toPlainObject(),
-                        },
-                        null,
-                        2
-                    ),
-                },
-            ],
-        };
-    }
-
-    // Signed mode: load wallet, sign and send
     try {
         const wallet = loadWalletFromPem(walletConfig.pemPath!);
         const api = createNetworkProvider(config);
