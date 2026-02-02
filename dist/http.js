@@ -6,25 +6,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createHttpServer = createHttpServer;
 const fastify_1 = __importDefault(require("fastify"));
 const searchProducts_1 = require("./tools/searchProducts");
+const whitelistRegistry_1 = require("./utils/whitelistRegistry");
 function createHttpServer() {
     const fastify = (0, fastify_1.default)({ logger: false });
     fastify.get("/feed.json", async (request, reply) => {
-        // 1. Fetch "Showcase" products (Broad search or curated list)
-        // In production, this would iterate over all whitelisted collections.
-        // For MVP, we search for a default keyword or list all.
-        const result = await (0, searchProducts_1.searchProducts)("EGLD", undefined, 50);
-        const products = JSON.parse(result.content[0].text);
+        // 1. Fetch products from all whitelisted collections
+        const whitelist = (0, whitelistRegistry_1.loadWhitelist)();
+        const allProducts = [];
+        for (const collectionId of whitelist) {
+            try {
+                const result = await (0, searchProducts_1.searchProducts)("EGLD", collectionId, 20);
+                const products = JSON.parse(result.content[0].text);
+                allProducts.push(...products);
+            }
+            catch (e) {
+                console.error(`Error fetching products for ${collectionId}:`, e);
+            }
+        }
         // 2. Map to Google Merchant Center Feed Schema (JSON)
-        // Ref: https://developers.google.com/shopping-content/guides/products/feed-tso
-        const feedItems = products.map((p) => ({
+        const feedItems = allProducts.map((p) => ({
             id: p.id,
             title: p.name,
             description: p.description,
-            link: `https://xexchange.com/nft/${p.id}`, // Deep-link to marketplace
+            link: `https://xexchange.com/nft/${p.id}`,
             image_link: p.image_url,
-            availability: p.availability, // "in_stock"
+            availability: p.availability,
             price: {
-                value: p.price.split(" ")[0], // Extract numeric. TODO: Regex for precision
+                value: p.price.split(" ")[0],
                 currency: "EGLD"
             },
             brand: "MultiversX",

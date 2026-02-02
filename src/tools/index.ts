@@ -16,3 +16,8 @@ export * from "./sendTokensToMultipleReceivers";
 export * from "./createRelayedV3";
 export * from "./trackTransaction";
 export * from "./searchProducts";
+export * from "./registry/getAgentManifest";
+export * from "./registry/getAgentTrustSummary";
+export * from "./marketplace/searchAgents";
+export * from "./marketplace/getTopRatedAgents";
+export * from "./commerce/createPurchaseTransaction";

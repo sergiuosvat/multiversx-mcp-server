@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
+import { isWhitelisted } from "../utils/whitelistRegistry";
 
 export interface OrderStatus {
     status: "pending" | "success" | "failed" | "unknown";
@@ -84,18 +85,37 @@ export async function trackTransaction(txHash: string): Promise<ToolResult> {
                 break;
         }
 
+        // Optional: Verify if the transaction is interacting with a whitelisted contract
+        // A purchase transaction usually targets a marketplace contract.
+        const interactionTarget = tx.receiver.toString();
+        // NOTE: In some cases, for NFT buy, the receiver might be the previous owner, 
+        // and the 'buy' call happens in 'data'. For MVP, we check the target of the transaction.
+        const isTrusted = isWhitelisted(interactionTarget);
+
         return {
-            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+            content: [{
+                type: "text",
+                text: JSON.stringify({ ...result, trusted: isTrusted }, null, 2)
+            }],
         };
-    } catch (error) {
+    } catch (error: any) {
+        // Handle pending state (404/Not Found from API)
+        if (error.response?.status === 404 || error.message?.includes("404")) {
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify({
+                        status: "pending",
+                        message: "Transaction not yet indexed by the API.",
+                        retry_after: 5
+                    }, null, 2)
+                }]
+            };
+        }
+
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify({ status: "unknown", details: `API Error: ${message}` }),
-                },
-            ],
+            content: [{ type: "text", text: `Error tracking transaction: ${message}` }]
         };
     }
 }

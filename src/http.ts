@@ -1,27 +1,35 @@
 import Fastify from "fastify";
 import { searchProducts } from "./tools/searchProducts";
+import { loadWhitelist } from "./utils/whitelistRegistry";
 
 export function createHttpServer() {
     const fastify = Fastify({ logger: false });
 
-    fastify.get("/feed.json", async (request, reply) => {
-        // 1. Fetch "Showcase" products (Broad search or curated list)
-        // In production, this would iterate over all whitelisted collections.
-        // For MVP, we search for a default keyword or list all.
-        const result = await searchProducts("EGLD", undefined, 50);
-        const products = JSON.parse(result.content[0].text);
+    const feedHandler = async (request: any, reply: any) => {
+        // 1. Fetch products from all whitelisted collections
+        const whitelist = loadWhitelist();
+        const allProducts = [];
+
+        for (const collectionId of whitelist) {
+            try {
+                const result = await searchProducts("EGLD", collectionId, 20);
+                const products = JSON.parse(result.content[0].text);
+                allProducts.push(...products);
+            } catch (e) {
+                console.error(`Error fetching products for ${collectionId}:`, e);
+            }
+        }
 
         // 2. Map to Google Merchant Center Feed Schema (JSON)
-        // Ref: https://developers.google.com/shopping-content/guides/products/feed-tso
-        const feedItems = products.map((p: any) => ({
+        const feedItems = allProducts.map((p: any) => ({
             id: p.id,
             title: p.name,
             description: p.description,
-            link: `https://xexchange.com/nft/${p.id}`, // Deep-link to marketplace
+            link: `https://xexchange.com/nft/${p.id}`,
             image_link: p.image_url,
-            availability: p.availability, // "in_stock"
+            availability: p.availability,
             price: {
-                value: p.price.split(" ")[0], // Extract numeric. TODO: Regex for precision
+                value: p.price.split(" ")[0],
                 currency: "EGLD"
             },
             brand: "MultiversX",
@@ -29,7 +37,10 @@ export function createHttpServer() {
         }));
 
         return { items: feedItems };
-    });
+    };
+
+    fastify.get("/feed.json", feedHandler);
+    fastify.get("/.well-known/acp/products.json", feedHandler);
 
     fastify.get("/health", async () => {
         return { status: "ok", service: "multiversx-mcp-server-http" };

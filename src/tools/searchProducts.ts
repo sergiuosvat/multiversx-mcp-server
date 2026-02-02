@@ -6,6 +6,7 @@ import { z } from "zod";
 import axios from "axios";
 import { ToolResult } from "./types";
 import { loadNetworkConfig } from "./networkConfig";
+import { isWhitelisted } from "../utils/whitelistRegistry";
 
 interface Product {
     id: string; // TokenIdentifier-Nonce
@@ -68,6 +69,12 @@ export async function searchProducts(
                 imageUrl = item.thumbnailUrl;
             }
 
+            const collectionId = item.collection || item.identifier.split("-").slice(0, 2).join("-");
+            if (!isWhitelisted(collectionId)) {
+                // skip non-whitelisted items
+                continue;
+            }
+
             products.push({
                 id: `${item.identifier}`,
                 name: item.name,
@@ -77,8 +84,9 @@ export async function searchProducts(
                 availability: "in_stock",
                 metadata: {
                     nonce: item.nonce,
-                    token_identifier: item.identifier.split("-").slice(0, 2).join("-"),
-                    trust_level: "public_api",
+                    token_identifier: collectionId,
+                    trust_level: "verified_marketplace",
+                    last_updated: new Date().toISOString(),
                 },
             });
         }

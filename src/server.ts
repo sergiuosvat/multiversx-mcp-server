@@ -112,5 +112,41 @@ export function createMcpServer() {
         async ({ query, collection, limit }) => asToolResult(tools.searchProducts(query, collection, limit))
     );
 
+    server.tool(
+        tools.getAgentManifestToolName,
+        tools.getAgentManifestToolDescription,
+        tools.getAgentManifestParamScheme,
+        async ({ agentNonce }) => asToolResult(tools.getAgentManifest(agentNonce))
+    );
+
+    server.tool(
+        tools.getAgentTrustSummaryToolName,
+        tools.getAgentTrustSummaryToolDescription,
+        tools.getAgentTrustSummaryParamScheme,
+        async ({ agentNonce }) => asToolResult(tools.getAgentTrustSummary(agentNonce))
+    );
+
+    server.tool(
+        tools.searchAgentsToolName,
+        tools.searchAgentsToolDescription,
+        tools.searchAgentsParamScheme,
+        async ({ query, minTrust, limit }) => asToolResult(tools.searchAgents(query, minTrust, limit))
+    );
+
+    server.tool(
+        tools.getTopRatedAgentsToolName,
+        tools.getTopRatedAgentsToolDescription,
+        tools.getTopRatedAgentsParamScheme,
+        async ({ category, limit }) => asToolResult(tools.getTopRatedAgents(category, limit))
+    );
+
+    server.tool(
+        tools.createPurchaseTransactionToolName,
+        tools.createPurchaseTransactionToolDescription,
+        tools.createPurchaseTransactionParamScheme,
+        async ({ tokenIdentifier, nonce, quantity, receiver, price }) =>
+            asToolResult(tools.createPurchaseTransaction({ tokenIdentifier, nonce, quantity, receiver, price }))
+    );
+
     return server;
 }
