@@ -19,6 +19,7 @@ interface Product {
         nonce: number;
         token_identifier: string;
         trust_level: string;
+        last_updated?: string;
     };
 }
 

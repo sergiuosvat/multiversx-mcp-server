@@ -1,5 +1,7 @@
 import { getAgentManifest } from "../getAgentManifest";
 import { getAgentTrustSummary } from "../getAgentTrustSummary";
+import { getAgentReputation, submitAgentFeedback } from "../agentReputation";
+import { isJobVerified, submitJobProof, verifyJob } from "../jobValidation";
 import { createNetworkProvider } from "../../networkConfig";
 
 jest.mock("../../networkConfig", () => ({
@@ -64,12 +66,62 @@ describe("Registry Tools", () => {
     });
 
     describe("get-agent-trust-summary", () => {
-        it("should return trust metrics for an agent", async () => {
+        it("should return trust metrics for an agent using real queries", async () => {
+            (mockApi.doGetGeneric as jest.Mock).mockImplementation((url: string) => {
+                if (url.includes("getReputationScore")) {
+                    return Promise.resolve({ data: { data: { returnData: [Buffer.from([0, 0, 0x23, 0x28]).toString("base64")] } } }); // 9000 -> 90.0
+                }
+                if (url.includes("getTotalJobs")) {
+                    return Promise.resolve({ data: { data: { returnData: [Buffer.from([0, 0, 0, 0x64]).toString("base64")] } } }); // 100
+                }
+                return Promise.resolve([]);
+            });
+
             const result = await getAgentTrustSummary(1);
             const content = JSON.parse(result.content[0].text);
 
+            expect(content.reputation_score).toBe(90.0);
+            expect(content.total_completed_jobs).toBe(100);
+            expect(content.status).toBe("highly_trusted");
+        });
+    });
+
+    describe("agent-reputation", () => {
+        it("should return reputation data", async () => {
+            const result = await getAgentReputation(1);
+            const content = JSON.parse(result.content[0].text);
             expect(content).toHaveProperty("reputation_score");
-            expect(content).toHaveProperty("total_completed_jobs");
+        });
+
+        it("should create feedback transaction", async () => {
+            const result = await submitAgentFeedback(1, 5);
+            const tx = JSON.parse(result.content[0].text);
+            expect(tx.receiver).toBeDefined();
+            const decodedData = Buffer.from(tx.data, "base64").toString();
+            expect(decodedData).toContain("submitFeedback");
+        });
+    });
+
+    describe("job-validation", () => {
+        it("should check if job is verified", async () => {
+            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue({ data: { data: { returnData: [Buffer.from([0x01]).toString("base64")] } } });
+            const result = await isJobVerified("job-1");
+            const content = JSON.parse(result.content[0].text);
+            expect(content.verified).toBe(true);
+        });
+
+        it("should create proof transaction", async () => {
+            const result = await submitJobProof("job-1", "hash");
+            const tx = JSON.parse(result.content[0].text);
+            const decodedData = Buffer.from(tx.data, "base64").toString();
+            expect(decodedData).toContain("submitProof");
+        });
+
+        it("should create verify transaction", async () => {
+            const result = await verifyJob("job-1", true);
+            const tx = JSON.parse(result.content[0].text);
+            const decodedData = Buffer.from(tx.data, "base64").toString();
+            expect(decodedData).toContain("verifyJob");
         });
     });
 });

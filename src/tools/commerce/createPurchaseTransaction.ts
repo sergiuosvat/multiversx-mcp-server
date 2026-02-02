@@ -30,7 +30,7 @@ export async function createPurchaseTransaction(params: {
             nonce: 0n,
             value: BigInt(params.price),
             receiver: Address.newFromBech32(params.receiver),
-            sender: Address.newFromBech32("erd1qqqqqqqqqqqqqpgqfzydqrew7dr666u64q60zk98v665v7f5pccshv882p"), // Valid placeholder
+            sender: Address.newFromBech32("erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv"), // Valid placeholder
             gasLimit: 10_000_000n,
             chainID: config.chainId,
             data: Buffer.from(data),

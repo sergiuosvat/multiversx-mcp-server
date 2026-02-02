@@ -18,6 +18,8 @@ export * from "./trackTransaction";
 export * from "./searchProducts";
 export * from "./registry/getAgentManifest";
 export * from "./registry/getAgentTrustSummary";
+export * from "./registry/agentReputation";
+export * from "./registry/jobValidation";
 export * from "./marketplace/searchAgents";
 export * from "./marketplace/getTopRatedAgents";
 export * from "./commerce/createPurchaseTransaction";

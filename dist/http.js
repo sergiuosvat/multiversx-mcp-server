@@ -9,7 +9,7 @@ const searchProducts_1 = require("./tools/searchProducts");
 const whitelistRegistry_1 = require("./utils/whitelistRegistry");
 function createHttpServer() {
     const fastify = (0, fastify_1.default)({ logger: false });
-    fastify.get("/feed.json", async (request, reply) => {
+    const feedHandler = async (request, reply) => {
         // 1. Fetch products from all whitelisted collections
         const whitelist = (0, whitelistRegistry_1.loadWhitelist)();
         const allProducts = [];
@@ -39,7 +39,9 @@ function createHttpServer() {
             condition: "new"
         }));
         return { items: feedItems };
-    });
+    };
+    fastify.get("/feed.json", feedHandler);
+    fastify.get("/.well-known/acp/products.json", feedHandler);
     fastify.get("/health", async () => {
         return { status: "ok", service: "multiversx-mcp-server-http" };
     });

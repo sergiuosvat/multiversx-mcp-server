@@ -141,6 +141,41 @@ export function createMcpServer() {
     );
 
     server.tool(
+        tools.getAgentReputationToolName,
+        tools.getAgentReputationToolDescription,
+        tools.getAgentReputationParamScheme,
+        async ({ agentNonce }) => asToolResult(tools.getAgentReputation(agentNonce))
+    );
+
+    server.tool(
+        tools.submitAgentFeedbackToolName,
+        tools.submitAgentFeedbackToolDescription,
+        tools.submitAgentFeedbackParamScheme,
+        async ({ agentNonce, rating }) => asToolResult(tools.submitAgentFeedback(agentNonce, rating))
+    );
+
+    server.tool(
+        tools.isJobVerifiedToolName,
+        tools.isJobVerifiedToolDescription,
+        tools.isJobVerifiedParamScheme,
+        async ({ jobId }) => asToolResult(tools.isJobVerified(jobId))
+    );
+
+    server.tool(
+        tools.submitJobProofToolName,
+        tools.submitJobProofToolDescription,
+        tools.submitJobProofParamScheme,
+        async ({ jobId, proofHash }) => asToolResult(tools.submitJobProof(jobId, proofHash))
+    );
+
+    server.tool(
+        tools.verifyJobToolName,
+        tools.verifyJobToolDescription,
+        tools.verifyJobParamScheme,
+        async ({ jobId, status }) => asToolResult(tools.verifyJob(jobId, status))
+    );
+
+    server.tool(
         tools.createPurchaseTransactionToolName,
         tools.createPurchaseTransactionToolDescription,
         tools.createPurchaseTransactionParamScheme,
