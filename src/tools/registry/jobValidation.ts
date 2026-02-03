@@ -51,7 +51,7 @@ export async function submitJobProof(jobId: string, proofHash: string, sender?: 
             sender: senderAddress,
             gasLimit: 15_000_000n,
             chainID: config.chainId,
-            data: Buffer.from(`submitProof@${jobId}@${proofHash}`),
+            data: Buffer.from(`submit_proof@${jobId}@${proofHash}`),
             version: 1
         });
 
@@ -84,7 +84,7 @@ export async function verifyJob(jobId: string, status: boolean, sender?: string)
             sender: senderAddress,
             gasLimit: 10_000_000n,
             chainID: config.chainId,
-            data: Buffer.from(`verifyJob@${jobId}@${statusHex}`),
+            data: Buffer.from(`verify_job@${jobId}@${statusHex}`),
             version: 1
         });
 
