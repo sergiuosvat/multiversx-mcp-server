@@ -28,6 +28,17 @@ MVX_SIGNING_MODE=signed
 MVX_WALLET_PEM=./wallets/my-wallet.pem
 ```
 
+Configure Registry Addresses in `src/config.json`:
+```json
+{
+  "registry_config": {
+    "identity": "erd1...",
+    "reputation": "erd1...",
+    "validation": "erd1..."
+  }
+}
+```
+
 ### 3. Usage
 - **MCP Stdio**: Add to your MCP client config (e.g., `claude_desktop_config.json`).
 - **HTTP Mode**: Run `npm start http` to enable web-native features:

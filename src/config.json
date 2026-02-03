@@ -50,5 +50,10 @@
             }
         }
     },
+    "registry_config": {
+        "identity": "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+        "reputation": "erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv",
+        "validation": "erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv"
+    },
     "api_url": "https://api.multiversx.com"
 }

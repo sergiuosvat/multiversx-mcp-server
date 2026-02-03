@@ -29,7 +29,8 @@ export async function isJobVerified(jobId: string): Promise<ToolResult> {
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [{ type: "text", text: `Error checking job status: ${message}` }]
+            content: [{ type: "text", text: `Error checking job status: ${message}` }],
+            isError: true
         };
     }
 }
@@ -37,15 +38,17 @@ export async function isJobVerified(jobId: string): Promise<ToolResult> {
 /**
  * Build a transaction to submit a proof for a job (Agent only).
  */
-export async function submitJobProof(jobId: string, proofHash: string): Promise<ToolResult> {
+export async function submitJobProof(jobId: string, proofHash: string, sender?: string): Promise<ToolResult> {
     const config = loadNetworkConfig();
 
     try {
+        const senderAddress = sender ? Address.newFromBech32(sender) : Address.newFromBech32("erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu");
+
         const tx = new Transaction({
             nonce: 0n,
             value: 0n,
             receiver: Address.newFromBech32(REGISTRY_ADDRESSES.VALIDATION),
-            sender: Address.newFromBech32("erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv"), // Placeholder
+            sender: senderAddress,
             gasLimit: 15_000_000n,
             chainID: config.chainId,
             data: Buffer.from(`submitProof@${jobId}@${proofHash}`),
@@ -58,7 +61,8 @@ export async function submitJobProof(jobId: string, proofHash: string): Promise<
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [{ type: "text", text: `Error creating proof transaction: ${message}` }]
+            content: [{ type: "text", text: `Error creating proof transaction: ${message}` }],
+            isError: true
         };
     }
 }
@@ -66,16 +70,18 @@ export async function submitJobProof(jobId: string, proofHash: string): Promise<
 /**
  * Build a transaction to verify a job (Oracle/Validator only).
  */
-export async function verifyJob(jobId: string, status: boolean): Promise<ToolResult> {
+export async function verifyJob(jobId: string, status: boolean, sender?: string): Promise<ToolResult> {
     const config = loadNetworkConfig();
 
     try {
         const statusHex = status ? "01" : "00";
+        const senderAddress = sender ? Address.newFromBech32(sender) : Address.newFromBech32("erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu");
+
         const tx = new Transaction({
             nonce: 0n,
             value: 0n,
             receiver: Address.newFromBech32(REGISTRY_ADDRESSES.VALIDATION),
-            sender: Address.newFromBech32("erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv"), // Placeholder
+            sender: senderAddress,
             gasLimit: 10_000_000n,
             chainID: config.chainId,
             data: Buffer.from(`verifyJob@${jobId}@${statusHex}`),
@@ -88,7 +94,8 @@ export async function verifyJob(jobId: string, status: boolean): Promise<ToolRes
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [{ type: "text", text: `Error creating verify transaction: ${message}` }]
+            content: [{ type: "text", text: `Error creating verify transaction: ${message}` }],
+            isError: true
         };
     }
 }
@@ -104,6 +111,7 @@ export const submitJobProofToolDescription = "Create an unsigned transaction to 
 export const submitJobProofParamScheme = {
     jobId: z.string().describe("The Job ID"),
     proofHash: z.string().describe("Hash of the result data to prove"),
+    sender: z.string().optional().describe("The address of the Agent submitting the proof"),
 };
 
 export const verifyJobToolName = "verify-job";
@@ -111,4 +119,5 @@ export const verifyJobToolDescription = "Create an unsigned transaction to final
 export const verifyJobParamScheme = {
     jobId: z.string().describe("The Job ID to verify"),
     status: z.boolean().describe("True for success, False for failure"),
+    sender: z.string().optional().describe("The address of the Oracle/Validator"),
 };
