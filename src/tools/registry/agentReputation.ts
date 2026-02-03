@@ -71,7 +71,7 @@ export async function submitAgentFeedback(agentNonce: number, rating: number, se
             sender: senderAddress,
             gasLimit: 10_000_000n,
             chainID: config.chainId,
-            data: Buffer.from(`submitFeedback@${agentNonce.toString(16).padStart(16, "0")}@${rating.toString(16).padStart(2, "0")}`),
+            data: Buffer.from(`submit_feedback@${agentNonce.toString(16).padStart(16, "0")}@${rating.toString(16).padStart(2, "0")}`),
             version: 1
         });
 

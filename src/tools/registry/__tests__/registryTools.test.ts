@@ -17,7 +17,7 @@ describe("Registry Tools", () => {
     describe("get-agent-manifest", () => {
         it("should fetch and parse agent manifest from updateAgent transaction", async () => {
             const mockTxData = {
-                data: "updateAgent@7b226e616d65223a2255706461746564204167656e74227d" // updateAgent@{"name":"Updated Agent"}
+                data: "update_agent@7b226e616d65223a2255706461746564204167656e74227d" // update_agent@{"name":"Updated Agent"}
             };
             (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([mockTxData]);
 
@@ -29,7 +29,7 @@ describe("Registry Tools", () => {
 
         it("should fetch and parse agent manifest from registerAgent transaction", async () => {
             const mockTxData = {
-                data: "registerAgent@7b226e616d65223a2254657374204167656e74227d" // registerAgent@{"name":"Test Agent"}
+                data: "register_agent@7b226e616d65223a2254657374204167656e74227d" // register_agent@{"name":"Test Agent"}
             };
             (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([mockTxData]);
 
@@ -41,7 +41,7 @@ describe("Registry Tools", () => {
         });
 
         it("should handle invalid registration data format (invalid hex)", async () => {
-            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "registerAgent@nothex" }]);
+            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@nothex" }]);
             const result = await getAgentManifest(1);
             expect(result.content[0].text).toContain("Error fetching agent manifest");
         });
@@ -53,7 +53,7 @@ describe("Registry Tools", () => {
         });
 
         it("should handle invalid JSON content", async () => {
-            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "registerAgent@invalidhex" }]);
+            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@invalidhex" }]);
             const result = await getAgentManifest(1);
             expect(result.content[0].text).toContain("Error fetching agent manifest");
         });
@@ -109,7 +109,7 @@ describe("Registry Tools", () => {
             const tx = JSON.parse(result.content[0].text);
             expect(tx.receiver).toBeDefined();
             const decodedData = Buffer.from(tx.data, "base64").toString();
-            expect(decodedData).toContain("submitFeedback");
+            expect(decodedData).toContain("submit_feedback");
         });
 
         it("should create feedback transaction with custom sender", async () => {
@@ -133,7 +133,7 @@ describe("Registry Tools", () => {
             const result = await submitJobProof("job-1", "hash", customSender);
             const tx = JSON.parse(result.content[0].text);
             const decodedData = Buffer.from(tx.data, "base64").toString();
-            expect(decodedData).toContain("submitProof");
+            expect(decodedData).toContain("submit_proof");
             expect(tx.sender).toBe(customSender);
         });
 
@@ -142,7 +142,7 @@ describe("Registry Tools", () => {
             const result = await verifyJob("job-1", true, customSender);
             const tx = JSON.parse(result.content[0].text);
             const decodedData = Buffer.from(tx.data, "base64").toString();
-            expect(decodedData).toContain("verifyJob");
+            expect(decodedData).toContain("verify_job");
             expect(tx.sender).toBe(customSender);
         });
     });

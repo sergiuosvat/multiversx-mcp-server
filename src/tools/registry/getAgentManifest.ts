@@ -11,9 +11,9 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
 
     try {
         // In a real scenario, we search for the Registry contract transactions.
-        // For MVP, we search for any tx with 'registerAgent' and the correct nonce if indexed.
+        // For MVP, we search for any tx with 'register_agent' and the correct nonce if indexed.
         // Or we just fetch the NFT metadata if the manifest is stored in attributes.
-        // Spec 2.2 says: search for registerAgent in data field.
+        // Spec 2.2 says: search for register_agent in data field.
 
         const api = createNetworkProvider(config);
 
@@ -34,7 +34,7 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
 
             const agentTxs = txs.filter((tx: any) => {
                 const data = tx.data ? tx.data.toString() : "";
-                return (data.startsWith("registerAgent@") || data.startsWith("updateAgent@"));
+                return (data.startsWith("register_agent@") || data.startsWith("update_agent@"));
             });
 
             if (agentTxs.length === 0) {
@@ -46,7 +46,7 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
             const tx = agentTxs[0]; // Latest one due to order=desc
             const dataField = tx.data ? tx.data.toString() : "";
 
-            // Data format: registerAgent@JSON_HEX
+            // Data format: register_agent@JSON_HEX
             const parts = dataField.split("@");
             if (parts.length < 2) {
                 return {
