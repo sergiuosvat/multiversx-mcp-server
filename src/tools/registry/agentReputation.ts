@@ -24,11 +24,15 @@ export async function getAgentReputation(agentNonce: number): Promise<ToolResult
 
         const score = scoreResponse?.data?.data?.returnData?.[0]
             ? Buffer.from(scoreResponse.data.data.returnData[0], "base64").readUInt32BE(0) / 100
-            : 85.0; // Fallback
+            : null;
 
         const totalJobs = totalJobsResponse?.data?.data?.returnData?.[0]
             ? parseInt(Buffer.from(totalJobsResponse.data.data.returnData[0], "base64").toString("hex"), 16)
-            : 100;
+            : null;
+
+        if (score === null || totalJobs === null) {
+            throw new Error("Failed to fetch reputation data from registry");
+        }
 
         const result = {
             agent_id: agentNonce,
@@ -43,7 +47,8 @@ export async function getAgentReputation(agentNonce: number): Promise<ToolResult
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [{ type: "text", text: `Error fetching reputation: ${message}` }]
+            content: [{ type: "text", text: `Error fetching reputation: ${message}` }],
+            isError: true
         };
     }
 }
@@ -51,15 +56,19 @@ export async function getAgentReputation(agentNonce: number): Promise<ToolResult
 /**
  * Build a transaction to submit feedback for an agent.
  */
-export async function submitAgentFeedback(agentNonce: number, rating: number): Promise<ToolResult> {
+export async function submitAgentFeedback(agentNonce: number, rating: number, sender?: string): Promise<ToolResult> {
     const config = loadNetworkConfig();
 
     try {
+        // Default sender to a safe dummy if not provided (for unsigned structure generation only)
+        // Ideally, the client MUST provide the sender to generate a valid transaction structure for signing.
+        const senderAddress = sender ? Address.newFromBech32(sender) : Address.newFromBech32("erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu");
+
         const tx = new Transaction({
-            nonce: 0n,
+            nonce: 0n, // Nonce will be 0 if we don't fetch it. For MCP unsigned return, 0 is often a placeholder.
             value: 0n,
             receiver: Address.newFromBech32(REGISTRY_ADDRESSES.REPUTATION),
-            sender: Address.newFromBech32("erd1qyu5wgts7fp92az5y2yuqlsq0zy7gu3g5pcsq7yfu3ez3gr3qpuq00xjqv"), // Valid user address (from whitelist)
+            sender: senderAddress,
             gasLimit: 10_000_000n,
             chainID: config.chainId,
             data: Buffer.from(`submitFeedback@${agentNonce.toString(16).padStart(16, "0")}@${rating.toString(16).padStart(2, "0")}`),
@@ -72,7 +81,8 @@ export async function submitAgentFeedback(agentNonce: number, rating: number): P
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
         return {
-            content: [{ type: "text", text: `Error creating feedback transaction: ${message}` }]
+            content: [{ type: "text", text: `Error creating feedback transaction: ${message}` }],
+            isError: true
         };
     }
 }
@@ -88,4 +98,5 @@ export const submitAgentFeedbackToolDescription = "Create an unsigned transactio
 export const submitAgentFeedbackParamScheme = {
     agentNonce: z.number().describe("The Agent ID (NFT Nonce)"),
     rating: z.number().min(1).max(5).describe("Rating from 1 to 5"),
+    sender: z.string().optional().describe("The address of the feedback submitter (Employer)"),
 };
