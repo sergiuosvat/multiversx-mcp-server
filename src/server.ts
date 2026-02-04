@@ -1,9 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as tools from "./tools/index";
+import { ToolResult } from "./tools/types";
 
-// Helper to cast tool results to avoid strict TZ index signature issues
-// The SDK expects [key: string]: unknown, which our strict ToolResult interfaces don't have
-const asToolResult = (p: Promise<any>) => p as Promise<any>;
+// Helper to cast tool results to avoid strict TZ index signature issues with the MCP SDK.
+// The SDK expects a specific result structure that includes 'content'.
+const asToolResult = (p: Promise<ToolResult>) => p as Promise<any>;
 
 export const MCP_SERVER_NAME = "multiversx-mcp-server";
 

@@ -37,8 +37,8 @@ exports.MCP_SERVER_NAME = void 0;
 exports.createMcpServer = createMcpServer;
 const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
 const tools = __importStar(require("./tools/index"));
-// Helper to cast tool results to avoid strict TZ index signature issues
-// The SDK expects [key: string]: unknown, which our strict ToolResult interfaces don't have
+// Helper to cast tool results to avoid strict TZ index signature issues with the MCP SDK.
+// The SDK expects a specific result structure that includes 'content'.
 const asToolResult = (p) => p;
 exports.MCP_SERVER_NAME = "multiversx-mcp-server";
 function createMcpServer() {

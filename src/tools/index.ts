@@ -20,6 +20,6 @@ export * from "./registry/getAgentManifest";
 export * from "./registry/getAgentTrustSummary";
 export * from "./registry/agentReputation";
 export * from "./registry/jobValidation";
-export * from "./marketplace/searchAgents";
-export * from "./marketplace/getTopRatedAgents";
+export * from "./registry/searchAgents";
+export * from "./registry/getTopRatedAgents";
 export * from "./commerce/createPurchaseTransaction";

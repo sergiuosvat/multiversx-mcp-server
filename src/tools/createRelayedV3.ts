@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Transaction, TransactionComputer } from "@multiversx/sdk-core";
+import { Transaction, TransactionComputer, IPlainTransactionObject } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
 import { loadWalletConfig, loadWalletFromPem } from "./walletConfig";
@@ -27,6 +27,7 @@ export async function createRelayedV3(
 
         // Set relayer address (must match the relayer's wallet)
         tx.relayer = relayerWallet.address;
+        tx.version = 2;
 
         // Sign the transaction as relayer using TransactionComputer
         const bytesToSign = txComputer.computeBytesForSigning(tx);
@@ -55,5 +56,5 @@ export async function createRelayedV3(
 export const createRelayedV3ToolName = "create-relayed-v3";
 export const createRelayedV3ToolDescription = "Co-sign a signed inner transaction as a relayer for gas sponsoring (RelayedV3)";
 export const createRelayedV3ParamScheme = {
-    innerTransaction: z.object({}).passthrough().describe("The signed transaction object (as plain JSON)"),
+    innerTransaction: z.any().describe("The signed transaction object (as plain JSON)"),
 };

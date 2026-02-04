@@ -8,6 +8,23 @@ import { loadNetworkConfig, createNetworkProvider } from "../networkConfig";
  * Data format: register_agent@<nameHex>@<uriHex>@<publicKeyHex>[@metadata...]
  * Data format: update_agent@<nonceHex>@<uriHex>@<publicKeyHex>[@metadata...]
  */
+interface TransactionData {
+    data: string;
+}
+
+interface Manifest {
+    name: string;
+    uri: string;
+    public_key: string;
+    [key: string]: unknown;
+}
+
+/**
+ * Fetches the ARF (Agent Registration File) manifest for a given Agent ID (nonce).
+ * 
+ * Data format: register_agent@<nameHex>@<uriHex>@<publicKeyHex>[@metadata...]
+ * Data format: update_agent@<nonceHex>@<uriHex>@<publicKeyHex>[@metadata...]
+ */
 export async function getAgentManifest(agentNonce: number): Promise<ToolResult> {
     const config = loadNetworkConfig();
 
@@ -15,7 +32,7 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
         const api = createNetworkProvider(config);
 
         // Fetch transactions for the Registry contract
-        const txs = await api.doGetGeneric(`transactions?size=50&order=desc`);
+        const txs = await api.doGetGeneric(`transactions?size=50&order=desc`) as TransactionData[];
 
         if (!txs || txs.length === 0) {
             return {
@@ -24,7 +41,7 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
         }
 
         // Filter for agent registration/update transactions
-        const agentTxs = txs.filter((tx: any) => {
+        const agentTxs = txs.filter((tx: TransactionData) => {
             const data = tx.data ? tx.data.toString() : "";
             return (data.startsWith("register_agent@") || data.startsWith("update_agent@"));
         });
@@ -52,7 +69,7 @@ export async function getAgentManifest(agentNonce: number): Promise<ToolResult> 
         const uri = Buffer.from(parts[2], "hex").toString("utf-8");
         const publicKey = parts[3];
 
-        let manifest: any = {
+        let manifest: Manifest = {
             name: isRegistration ? nameOrNonce : `Agent #${nameOrNonce}`,
             uri: uri,
             public_key: publicKey

@@ -23,6 +23,17 @@ interface Product {
     };
 }
 
+interface ApiNftItem {
+    identifier: string;
+    name: string;
+    attributes: string;
+    price: string;
+    url: string;
+    thumbnailUrl: string;
+    collection: string;
+    nonce: number;
+}
+
 /**
  * Search for NFTs/SFTs using the MultiversX API.
  * Uses axios directly as SDK doesn't expose full NFT search with all params easily.
@@ -33,7 +44,7 @@ export async function searchProducts(
     limit: number = 5
 ): Promise<ToolResult> {
     const config = loadNetworkConfig();
-    const params: any = {
+    const params: Record<string, string | number> = {
         search: query,
         size: limit,
         type: "NonFungibleESDT,SemiFungibleESDT",
@@ -46,7 +57,7 @@ export async function searchProducts(
     try {
         const url = `${config.apiUrl}/nfts`;
         const response = await axios.get(url, { params });
-        const items = response.data;
+        const items = response.data as ApiNftItem[];
 
         const products: Product[] = [];
 

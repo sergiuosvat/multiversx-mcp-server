@@ -13,14 +13,14 @@ export interface FeedItem {
     condition?: string;
 }
 
-export function validateFeed(items: any[]): { valid: boolean; errors: string[] } {
+export function validateFeed(items: unknown[]): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!Array.isArray(items)) {
         return { valid: false, errors: ["Feed root must be an array of items"] };
     }
 
-    items.forEach((item, index) => {
+    (items as any[]).forEach((item, index) => {
         if (!item.id) errors.push(`Item ${index}: Missing 'id'`);
         if (!item.title) errors.push(`Item ${index}: Missing 'title'`);
         if (!item.description) errors.push(`Item ${index}: Missing 'description'`);

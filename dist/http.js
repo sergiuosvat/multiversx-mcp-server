@@ -10,7 +10,7 @@ const whitelistRegistry_1 = require("./utils/whitelistRegistry");
 const manifest_1 = require("./ucp/manifest");
 function createHttpServer() {
     const fastify = (0, fastify_1.default)({ logger: false });
-    const feedHandler = async (request, reply) => {
+    const feedHandler = async (_request, _reply) => {
         // 1. Fetch products from all whitelisted collections
         const whitelist = (0, whitelistRegistry_1.loadWhitelist)();
         const allProducts = [];
