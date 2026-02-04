@@ -26,6 +26,8 @@ Create a `.env` file (see `.env.example`):
 MVX_NETWORK=devnet
 MVX_SIGNING_MODE=signed
 MVX_WALLET_PEM=./wallets/my-wallet.pem
+# OR for multi-shard Relayed V3 support:
+MVX_WALLET_DIR=./wallets/
 ```
 
 Configure Registry Addresses in `src/config.json`:
