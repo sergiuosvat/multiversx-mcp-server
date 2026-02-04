@@ -33,8 +33,9 @@ export async function trackTransaction(txHash: string): Promise<ToolResult> {
         let tx;
         try {
             tx = await api.getTransaction(txHash);
-        } catch (e: any) {
-            if (e.response?.status === 404) {
+        } catch (e: unknown) {
+            const error = e as { response?: { status: number } };
+            if (error.response?.status === 404) {
                 // Propagation delay
                 return {
                     content: [
@@ -98,9 +99,10 @@ export async function trackTransaction(txHash: string): Promise<ToolResult> {
                 text: JSON.stringify({ ...result, trusted: isTrusted }, null, 2)
             }],
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Handle pending state (404/Not Found from API)
-        if (error.response?.status === 404 || error.message?.includes("404")) {
+        const axiosError = error as { response?: { status: number }, message?: string };
+        if (axiosError.response?.status === 404 || axiosError.message?.includes("404")) {
             return {
                 content: [{
                     type: "text",

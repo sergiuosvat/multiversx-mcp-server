@@ -1,20 +1,30 @@
-import Fastify from "fastify";
+import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import { searchProducts } from "./tools/searchProducts";
 import { loadWhitelist } from "./utils/whitelistRegistry";
 import { MULTIVERSX_UCP_MANIFEST } from "./ucp/manifest";
+import { ToolResult } from "./tools/types";
+
+interface ProductItem {
+    id: string;
+    name: string;
+    description: string;
+    image_url: string;
+    availability: string;
+    price: string;
+}
 
 export function createHttpServer() {
     const fastify = Fastify({ logger: false });
 
-    const feedHandler = async (request: any, reply: any) => {
+    const feedHandler = async (_request: FastifyRequest, _reply: FastifyReply) => {
         // 1. Fetch products from all whitelisted collections
         const whitelist = loadWhitelist();
-        const allProducts = [];
+        const allProducts: ProductItem[] = [];
 
         for (const collectionId of whitelist) {
             try {
-                const result = await searchProducts("EGLD", collectionId, 20);
-                const products = JSON.parse(result.content[0].text);
+                const result: ToolResult = await searchProducts("EGLD", collectionId, 20);
+                const products = JSON.parse(result.content[0].text) as ProductItem[];
                 allProducts.push(...products);
             } catch (e) {
                 console.error(`Error fetching products for ${collectionId}:`, e);
@@ -22,7 +32,7 @@ export function createHttpServer() {
         }
 
         // 2. Map to Google Merchant Center Feed Schema (JSON)
-        const feedItems = allProducts.map((p: any) => ({
+        const feedItems = allProducts.map((p: ProductItem) => ({
             id: p.id,
             title: p.name,
             description: p.description,
