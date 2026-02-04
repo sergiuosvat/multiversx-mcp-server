@@ -8,6 +8,7 @@ import * as fs from "fs";
 
 export interface WalletConfig {
     pemPath?: string;
+    walletsDir?: string;
 }
 
 export interface LoadedWallet {
@@ -23,6 +24,7 @@ export interface LoadedWallet {
 export function loadWalletConfig(): WalletConfig {
     return {
         pemPath: process.env.MVX_WALLET_PEM,
+        walletsDir: process.env.MVX_WALLET_DIR,
     };
 }
 
@@ -46,6 +48,30 @@ export function loadWalletFromPem(pemPath: string): LoadedWallet {
         signer,
         address,
     };
+}
+
+/**
+ * Load all wallets from a directory (for multi-shard support).
+ */
+export function loadWalletsFromDir(dirPath: string): LoadedWallet[] {
+    if (!fs.existsSync(dirPath)) {
+        return [];
+    }
+
+    const wallets: LoadedWallet[] = [];
+    const files = fs.readdirSync(dirPath);
+
+    for (const file of files) {
+        if (file.endsWith(".pem")) {
+            try {
+                const w = loadWalletFromPem(dirPath + "/" + file);
+                wallets.push(w);
+            } catch (e) {
+                console.warn(`Failed to load wallet ${file}:`, e);
+            }
+        }
+    }
+    return wallets;
 }
 
 /**
