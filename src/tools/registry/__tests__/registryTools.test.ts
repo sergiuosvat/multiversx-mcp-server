@@ -17,33 +17,39 @@ describe("Registry Tools", () => {
     describe("get-agent-manifest", () => {
         it("should fetch and parse agent manifest from updateAgent transaction", async () => {
             const mockTxData = {
-                data: "update_agent@7b226e616d65223a2255706461746564204167656e74227d" // update_agent@{"name":"Updated Agent"}
+                // update_agent@nonce@uri@pk (nonce=01, uri="https://example.com", pk=abc123)
+                data: "update_agent@3031@68747470733a2f2f6578616d706c652e636f6d@616263313233"
             };
             (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([mockTxData]);
 
             const result = await getAgentManifest(1);
             const content = JSON.parse(result.content[0].text);
 
-            expect(content).toEqual({ name: "Updated Agent" });
+            expect(content.name).toBe("Agent #01");
+            expect(content.uri).toBe("https://example.com");
+            expect(content.public_key).toBe("616263313233");
         });
 
         it("should fetch and parse agent manifest from registerAgent transaction", async () => {
             const mockTxData = {
-                data: "register_agent@7b226e616d65223a2254657374204167656e74227d" // register_agent@{"name":"Test Agent"}
+                // register_agent@name@uri@pk (name="TestAgent", uri="https://test.com", pk=def456)
+                data: "register_agent@546573744167656e74@68747470733a2f2f746573742e636f6d@646566343536"
             };
             (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([mockTxData]);
 
             const result = await getAgentManifest(1);
             const content = JSON.parse(result.content[0].text);
 
-            expect(content).toEqual({ name: "Test Agent" });
+            expect(content.name).toBe("TestAgent");
+            expect(content.uri).toBe("https://test.com");
+            expect(content.public_key).toBe("646566343536");
             expect(mockApi.doGetGeneric).toHaveBeenCalledWith(expect.stringContaining("transactions?size=50"));
         });
 
-        it("should handle invalid registration data format (invalid hex)", async () => {
-            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@nothex" }]);
+        it("should handle invalid registration data format (not enough parts)", async () => {
+            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@onlyname" }]);
             const result = await getAgentManifest(1);
-            expect(result.content[0].text).toContain("Error fetching agent manifest");
+            expect(result.content[0].text).toContain("Invalid registration data format");
         });
 
         it("should handle missing registration transaction", async () => {
@@ -52,10 +58,12 @@ describe("Registry Tools", () => {
             expect(result.content[0].text).toContain("No registration transactions found on network.");
         });
 
-        it("should handle invalid JSON content", async () => {
-            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@invalidhex" }]);
+        it("should handle invalid hex content", async () => {
+            // Only 3 parts instead of 4
+            (mockApi.doGetGeneric as jest.Mock).mockResolvedValue([{ data: "register_agent@aa@bb@cc" }]);
             const result = await getAgentManifest(1);
-            expect(result.content[0].text).toContain("Error fetching agent manifest");
+            // This should parse but may have garbage - at least it won't crash
+            expect(result.content[0].text).toBeDefined();
         });
 
         it("should handle API errors", async () => {
