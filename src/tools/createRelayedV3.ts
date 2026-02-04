@@ -27,6 +27,7 @@ export async function createRelayedV3(
 
         // Set relayer address (must match the relayer's wallet)
         tx.relayer = relayerWallet.address;
+        tx.version = 2;
 
         // Sign the transaction as relayer using TransactionComputer
         const bytesToSign = txComputer.computeBytesForSigning(tx);
