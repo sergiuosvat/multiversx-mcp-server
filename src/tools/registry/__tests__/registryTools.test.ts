@@ -92,6 +92,28 @@ describe("Registry Tools", () => {
             expect(content.total_completed_jobs).toBe(100);
             expect(content.status).toBe("highly_trusted");
         });
+
+        it("should return active status for low reputation", async () => {
+            (mockApi.doGetGeneric as jest.Mock).mockImplementation((url: string) => {
+                if (url.includes("getReputationScore")) {
+                    return Promise.resolve({ data: { data: { returnData: [Buffer.from([0, 0, 0, 0x46]).toString("base64")] } } }); // 70.0
+                }
+                if (url.includes("getTotalJobs")) {
+                    return Promise.resolve({ data: { data: { returnData: [Buffer.from([0]).toString("base64")] } } }); // 0
+                }
+                return Promise.resolve([]);
+            });
+
+            const result = await getAgentTrustSummary(2);
+            const content = JSON.parse(result.content[0].text);
+            expect(content.status).toBe("active");
+        });
+
+        it("should handle error in fetching trust summary", async () => {
+            (mockApi.doGetGeneric as jest.Mock).mockRejectedValue(new Error("RPC Error"));
+            const result = await getAgentTrustSummary(1);
+            expect(result.content[0].text).toContain("Error fetching trust summary");
+        });
     });
 
     describe("agent-reputation", () => {
