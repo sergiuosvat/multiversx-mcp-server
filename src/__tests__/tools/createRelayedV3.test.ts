@@ -14,6 +14,11 @@ jest.mock("@multiversx/sdk-core", () => {
         })),
         Address: {
             newFromBech32: jest.fn().mockImplementation((addr) => ({ toBech32: () => addr }))
+        },
+        UserVerifier: {
+            fromAddress: jest.fn().mockImplementation(() => ({
+                verify: jest.fn().mockReturnValue(true)
+            }))
         }
     };
 });
@@ -22,6 +27,9 @@ jest.mock("../../tools/networkConfig", () => ({
     loadNetworkConfig: jest.fn().mockReturnValue({ chainId: "D", explorerUrl: "https://devnet-explorer.multiversx.com" }),
     createNetworkProvider: jest.fn().mockReturnValue({
         sendTransaction: jest.fn().mockResolvedValue("relayed-tx-hash"),
+        simulateTransaction: jest.fn().mockResolvedValue({
+            execution: { result: "success" }
+        })
     }),
 }));
 

@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { Transaction, TransactionComputer, IPlainTransactionObject } from "@multiversx/sdk-core";
+import { Transaction, TransactionComputer, Address, UserVerifier } from "@multiversx/sdk-core";
 import { ToolResult } from "./types";
 import { loadNetworkConfig, createNetworkProvider } from "./networkConfig";
-import { loadWalletConfig, loadWalletFromPem, loadWalletsFromDir, getWalletAddress, LoadedWallet } from "./walletConfig";
-import { Address } from "@multiversx/sdk-core";
+import { loadWalletConfig, loadWalletFromPem, loadWalletsFromDir, LoadedWallet } from "./walletConfig";
 
 const txComputer = new TransactionComputer();
 
@@ -32,8 +31,6 @@ export async function createRelayedV3(
         // 1. Try single PEM
         if (walletConfig.pemPath) {
             relayerWallet = loadWalletFromPem(walletConfig.pemPath);
-            // Verify shard match (basic check: try to sign, if network rejects, it rejects)
-            // Ideally we check shard here.
         }
         // 2. Try Wallets Dir (Multi-shard)
         else if (walletConfig.walletsDir) {
@@ -43,8 +40,7 @@ export async function createRelayedV3(
             relayerWallet = wallets.find(w => getShard(w.address) === senderShard)!;
 
             if (!relayerWallet) {
-                // Fallback to first if only one? Or fail?
-                if (wallets.length > 0) relayerWallet = wallets[0]; // Best effort or strict fail?
+                if (wallets.length > 0) relayerWallet = wallets[0];
                 else throw new Error("No relayer wallets found in directory.");
             }
         } else {
@@ -55,12 +51,27 @@ export async function createRelayedV3(
         tx.relayer = relayerWallet.address;
         tx.version = 2;
 
-        // Sign the transaction as relayer using TransactionComputer
+        // 1. Validate Inner Transaction Signature (Crucial for V3)
+        // User must have signed with 'relayer' field set to this relayer's address
+        const verifier = UserVerifier.fromAddress(tx.sender);
+        const innerSignatureValid = verifier.verify(txComputer.computeBytesForSigning(tx), tx.signature);
+        if (!innerSignatureValid) {
+            throw new Error("Invalid inner transaction signature. Ensure 'relayer' field was set to this relayer's address when signing.");
+        }
+
+        // 2. Sign the transaction as relayer 
         const bytesToSign = txComputer.computeBytesForSigning(tx);
         const signature = await relayerWallet.signer.sign(bytesToSign);
         tx.relayerSignature = signature;
 
-        // Send the transaction
+        // 3. Simulation BEFORE broadcast
+        const simulationResult = await api.simulateTransaction(tx);
+        if (simulationResult?.execution?.result !== 'success') {
+            const msg = simulationResult?.execution?.message || 'Simulation failed';
+            throw new Error(`Simulation failed: ${msg}`);
+        }
+
+        // 4. Send the transaction
         const txHash = await api.sendTransaction(tx);
 
         return {
