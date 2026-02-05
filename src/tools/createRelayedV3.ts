@@ -68,8 +68,10 @@ export async function createRelayedV3(
         const simulationResult: any = await api.simulateTransaction(tx);
 
         // Robust Parser: Handle both flattened (API) and nested (Proxy/Gateway) structures
+        const statusFromStatus = simulationResult?.status?.status;
+        const statusFromRaw = simulationResult?.raw?.status;
         const execution = simulationResult?.execution || simulationResult?.result?.execution;
-        const resultStatus = execution?.result;
+        const resultStatus = statusFromStatus || statusFromRaw || execution?.result;
 
         if (resultStatus !== 'success') {
             const msg = execution?.message || simulationResult?.error || 'Unknown error';
