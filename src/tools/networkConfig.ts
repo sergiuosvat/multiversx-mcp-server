@@ -2,7 +2,7 @@
  * SDK-based network configuration with customizable API URL
  */
 
-import { ApiNetworkProvider } from "@multiversx/sdk-core";
+import { DevnetEntrypoint, MainnetEntrypoint, TestnetEntrypoint, INetworkProvider, ApiNetworkProvider } from "@multiversx/sdk-core";
 import { USER_AGENT } from "./constants";
 
 export type NetworkName = "mainnet" | "devnet" | "testnet";
@@ -54,10 +54,22 @@ export function loadNetworkConfig(): NetworkConfig {
 }
 
 /**
- * Create an ApiNetworkProvider instance for the given network config.
+ * Create a Network Provider instance for the given network config using the modern Entrypoint pattern.
  */
-export function createNetworkProvider(config: NetworkConfig): ApiNetworkProvider {
-    return new ApiNetworkProvider(config.apiUrl, { clientName: USER_AGENT });
+export function createNetworkProvider(config: NetworkConfig): INetworkProvider {
+    const url = config.apiUrl;
+    const kind = url.includes('api') ? 'api' : 'proxy';
+
+    let entrypoint: any;
+    if (config.chainId === '1') {
+        entrypoint = new MainnetEntrypoint({ url, kind });
+    } else if (config.chainId === 'T') {
+        entrypoint = new TestnetEntrypoint({ url, kind });
+    } else {
+        entrypoint = new DevnetEntrypoint({ url, kind });
+    }
+
+    return entrypoint.createNetworkProvider();
 }
 
 /**

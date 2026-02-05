@@ -13,7 +13,10 @@ jest.mock("@multiversx/sdk-core", () => {
             computeBytesForSigning: jest.fn().mockReturnValue(Buffer.from("mock-bytes")),
         })),
         Address: {
-            newFromBech32: jest.fn().mockImplementation((addr) => ({ toBech32: () => addr }))
+            newFromBech32: jest.fn().mockImplementation((addr) => ({
+                toBech32: () => addr,
+                getPublicKey: jest.fn().mockReturnValue(new Uint8Array(32))
+            }))
         },
         UserVerifier: {
             fromAddress: jest.fn().mockImplementation(() => ({

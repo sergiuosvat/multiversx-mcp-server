@@ -65,9 +65,14 @@ export async function createRelayedV3(
         tx.relayerSignature = signature;
 
         // 3. Simulation BEFORE broadcast
-        const simulationResult = await api.simulateTransaction(tx);
-        if (simulationResult?.execution?.result !== 'success') {
-            const msg = simulationResult?.execution?.message || 'Simulation failed';
+        const simulationResult: any = await api.simulateTransaction(tx);
+
+        // Robust Parser: Handle both flattened (API) and nested (Proxy/Gateway) structures
+        const execution = simulationResult?.execution || simulationResult?.result?.execution;
+        const resultStatus = execution?.result;
+
+        if (resultStatus !== 'success') {
+            const msg = execution?.message || simulationResult?.error || 'Unknown error';
             throw new Error(`Simulation failed: ${msg}`);
         }
 
