@@ -22,12 +22,15 @@ export async function getAgentReputation(agentNonce: number): Promise<ToolResult
         const scoreResponse = await api.doGetGeneric(`accounts/${REGISTRY_ADDRESSES.REPUTATION}/vm-values/getReputationScore?args=${agentNonce}`);
         const totalJobsResponse = await api.doGetGeneric(`accounts/${REGISTRY_ADDRESSES.REPUTATION}/vm-values/getTotalJobs?args=${agentNonce}`);
 
-        const score = scoreResponse?.data?.data?.returnData?.[0]
-            ? Buffer.from(scoreResponse.data.data.returnData[0], "base64").readUInt32BE(0) / 100
+        const scoreReturnData = scoreResponse?.data?.data?.returnData || scoreResponse?.data?.data?.returnDataParts;
+        const totalJobsReturnData = totalJobsResponse?.data?.data?.returnData || totalJobsResponse?.data?.data?.returnDataParts;
+
+        const score = scoreReturnData?.[0]
+            ? Buffer.from(scoreReturnData[0], "base64").readUInt32BE(0) / 100
             : null;
 
-        const totalJobs = totalJobsResponse?.data?.data?.returnData?.[0]
-            ? parseInt(Buffer.from(totalJobsResponse.data.data.returnData[0], "base64").toString("hex"), 16)
+        const totalJobs = totalJobsReturnData?.[0]
+            ? parseInt(Buffer.from(totalJobsReturnData[0], "base64").toString("hex"), 16)
             : null;
 
         if (score === null || totalJobs === null) {
