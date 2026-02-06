@@ -26,11 +26,11 @@ export async function getAgentReputation(agentNonce: number): Promise<ToolResult
         const totalJobsReturnData = totalJobsResponse?.data?.data?.returnData || totalJobsResponse?.data?.data?.returnDataParts;
 
         const score = scoreReturnData?.[0]
-            ? Buffer.from(scoreReturnData[0], "base64").readUInt32BE(0) / 100
+            ? BigInt("0x" + Buffer.from(scoreReturnData[0], "base64").toString("hex")).toString()
             : null;
 
         const totalJobs = totalJobsReturnData?.[0]
-            ? parseInt(Buffer.from(totalJobsReturnData[0], "base64").toString("hex"), 16)
+            ? BigInt("0x" + Buffer.from(totalJobsReturnData[0], "base64").toString("hex")).toString()
             : null;
 
         if (score === null || totalJobs === null) {
